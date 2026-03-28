@@ -101,9 +101,10 @@
 
 ```
 chto-tam-u-persov/
-├── README.md                 ← этот файл
-├── chto-tam-u-persov.json    ← воркфлоу для импорта в n8n
-└── screenshot.png            ← скриншот воркфлоу (добавить вручную)
+├── README.md                  ← этот файл
+├── Chto_tam_u_persov.json     ← воркфлоу для импорта в n8n
+├── screenshot.png             ← скриншот воркфлоу
+└── screenshot-2.png           ← скриншот воркфлоу (доп.)
 ```
 
 ---
@@ -111,7 +112,7 @@ chto-tam-u-persov/
 ## Порядок установки
 
 1. Импортировать и активировать **Писца** (`pisec/pisec.json`)
-2. Импортировать этот воркфлоу: **Settings → Import workflow → `chto-tam-u-persov.json`**
+2. Импортировать этот воркфлоу: **Settings → Import workflow → `Chto_tam_u_persov.json`**
 3. Настроить credentials: Redis, Telegram, OpenAI-совместимый (Mercury-2), Supabase
 4. Активировать воркфлоу
 
