@@ -1,0 +1,684 @@
+{
+  "name": "Писец. Летопись всех работ",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "2e3f9eba-301e-4855-8dc5-0229153c5d8a",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        80,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "workflow_logs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "workflow_name",
+              "fieldValue": "={{ $json.workflow.name }}"
+            },
+            {
+              "fieldId": "workflow_id",
+              "fieldValue": "={{ $json.workflow.id }}"
+            },
+            {
+              "fieldId": "execution_id",
+              "fieldValue": "={{ $json.execution.id }}"
+            },
+            {
+              "fieldId": "node_name",
+              "fieldValue": "={{ $json.execution.lastNodeExecuted }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "error"
+            },
+            {
+              "fieldId": "items_count",
+              "fieldValue": "=0"
+            },
+            {
+              "fieldId": "error_message",
+              "fieldValue": "={{ $json.execution.error.message }}"
+            }
+          ]
+        }
+      },
+      "id": "7eaff7f1-5099-4c6a-9a55-62950a74e547",
+      "name": "Supabase Insert Error",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        304,
+        400
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "JXd2cOhQ6QEzOXVe",
+          "name": "Supabase"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "={{ $json.workflow.name }}: {{ $json.execution.error.message }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        304,
+        208
+      ],
+      "id": "c74be927-3c4c-4e5f-a730-63583421335d",
+      "name": "Send a text message",
+      "webhookId": "f2450616-ca6f-46e7-b522-7b3bd8c3a352",
+      "credentials": {
+        "telegramApi": {
+          "id": "oNDFx0Ji5smHsZ9f",
+          "name": "Zorka Bot"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "id": "0f35f55c-af7a-4d7a-8da3-234048d644b2",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "workflow_logs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "workflow_name",
+              "fieldValue": "={{ $json.workflow_name || '' }}"
+            },
+            {
+              "fieldId": "workflow_id",
+              "fieldValue": "={{ $json.workflow_id   || '' }}"
+            },
+            {
+              "fieldId": "execution_id",
+              "fieldValue": "={{ $json.execution_id  || '' }}"
+            },
+            {
+              "fieldId": "node_name",
+              "fieldValue": "={{ $json.node_name     || '' }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $json.status        || 'success' }}"
+            },
+            {
+              "fieldId": "items_count",
+              "fieldValue": "={{ $json.items_count   || 0 }}"
+            },
+            {
+              "fieldId": "output_data",
+              "fieldValue": "={{ $json.output_data   || null }}"
+            },
+            {
+              "fieldId": "error_message",
+              "fieldValue": "={{ $json.error_message || null }}"
+            },
+            {
+              "fieldId": "duration_ms",
+              "fieldValue": "={{ $json.duration_ms   || null }}"
+            }
+          ]
+        }
+      },
+      "id": "52a55ffc-9faa-4514-bc4a-8540a44d9434",
+      "name": "Supabase Insert",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        304,
+        -16
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "JXd2cOhQ6QEzOXVe",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 3 * * *"
+            }
+          ]
+        }
+      },
+      "id": "d64e6b03-bd9f-448e-8c2c-886d7aec2e39",
+      "name": "Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -160,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fn1",
+              "name": "filename",
+              "value": "={{ 'backup_' + $now.format('yyyy-MM-dd_HHmm') + '.dump' }}",
+              "type": "string"
+            },
+            {
+              "id": "fn2",
+              "name": "filepath",
+              "value": "={{ '/mnt/data/backups/supabase/backup_' + $now.format('yyyy-MM-dd_HHmm') + '.dump' }}",
+              "type": "string"
+            },
+            {
+              "id": "fn3",
+              "name": "command",
+              "value": "={{ 'mkdir -p /mnt/data/backups/supabase && pg_dump \"' + $env.SUPABASE_DB_CONN + '\" --format=custom --file=/mnt/data/backups/supabase/backup_' + $now.format('yyyy-MM-dd_HHmm') + '.dump && echo __SUCCESS__ || echo __FAILED__' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cd9571b0-6fa5-462a-9af1-b18e554df6c0",
+      "name": "Set Filename",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        96,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "command": "={{ $json.command }}"
+      },
+      "id": "a2f0d018-11de-4d32-b30d-64d3c6a45ab5",
+      "name": "Run pg_dump via SSH",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        352,
+        624
+      ],
+      "credentials": {
+        "sshPassword": {
+          "id": "87wWUs8fN9HyQKd4",
+          "name": "VPS SSH Root (n8n-shell)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "s1",
+              "name": "status",
+              "value": "={{ ($json.stdout || '').includes('__SUCCESS__') ? 'success' : 'error' }}",
+              "type": "string"
+            },
+            {
+              "id": "s2",
+              "name": "output_preview",
+              "value": "={{ ($json.stdout || ($json.stderr || '')).slice(0, 500) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ebcb97f5-9d96-4cd1-a35d-df8f8c0caf06",
+      "name": "Set Status",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        592,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "workflow_logs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "workflow_name",
+              "fieldValue": "supabase_backup"
+            },
+            {
+              "fieldId": "workflow_id",
+              "fieldValue": "={{ $workflow.id }}"
+            },
+            {
+              "fieldId": "execution_id",
+              "fieldValue": "={{ $execution.id }}"
+            },
+            {
+              "fieldId": "node_name",
+              "fieldValue": "pg_dump"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $('Set Status').item.json.status }}"
+            },
+            {
+              "fieldId": "items_count",
+              "fieldValue": 1
+            },
+            {
+              "fieldId": "output_data",
+              "fieldValue": "={{ JSON.stringify({ filepath: $('Set Filename').item.json.filepath, output: $('Set Status').item.json.output_preview }) }}"
+            }
+          ]
+        }
+      },
+      "id": "773bbc74-5a3c-471e-bb1a-4da252e6076b",
+      "name": "Log to Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        848,
+        624
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "JXd2cOhQ6QEzOXVe",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "upload-from-claude",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "c249144a-9f58-49d4-b10d-0cef12c61452",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -176,
+        912
+      ],
+      "webhookId": "upload-from-claude-001"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "p1",
+              "name": "filename",
+              "value": "={{ $json.body.filename }}",
+              "type": "string"
+            },
+            {
+              "id": "p2",
+              "name": "content",
+              "value": "={{ $json.body.content }}",
+              "type": "string"
+            },
+            {
+              "id": "p3",
+              "name": "bucket",
+              "value": "={{ $json.body.bucket || 'uploads' }}",
+              "type": "string"
+            },
+            {
+              "id": "p4",
+              "name": "label",
+              "value": "={{ $json.body.meta?.label || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7009130a-9650-4a5b-b8c4-d2e35288c4a6",
+      "name": "Extract Params",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "content",
+        "options": {
+          "fileName": "={{ $('Extract Params').item.json.filename }}"
+        }
+      },
+      "id": "c2eee48e-4c61-44bc-b6fa-618671c65197",
+      "name": "Convert to Binary",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        336,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR_SUPABASE_PROJECT_REF.supabase.co/storage/v1/object/{{ $('Extract Params').item.json.bucket }}/{{ $('Extract Params').item.json.filename }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "x-upsert",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "id": "8bd86dbd-5e1f-4c13-8906-27c49a60e138",
+      "name": "Upload to Supabase Storage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        576,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "r1",
+              "name": "status",
+              "value": "ok",
+              "type": "string"
+            },
+            {
+              "id": "r2",
+              "name": "filename",
+              "value": "={{ $('Extract Params').item.json.filename }}",
+              "type": "string"
+            },
+            {
+              "id": "r3",
+              "name": "bucket",
+              "value": "={{ $('Extract Params').item.json.bucket }}",
+              "type": "string"
+            },
+            {
+              "id": "r4",
+              "name": "url",
+              "value": "=https://YOUR_SUPABASE_PROJECT_REF.supabase.co/storage/v1/object/public/{{ $('Extract Params').item.json.bucket }}/{{ $('Extract Params').item.json.filename }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4d2cb029-0a86-46ef-9b7d-31eb3bec91ec",
+      "name": "Build Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        832,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "97d2ed6b-67d5-4ee8-801a-1462c0435293",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1088,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "workflow_logs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "workflow_name",
+              "fieldValue": "upload_from_claude"
+            },
+            {
+              "fieldId": "workflow_id",
+              "fieldValue": "={{ $workflow.id }}"
+            },
+            {
+              "fieldId": "execution_id",
+              "fieldValue": "={{ $execution.id }}"
+            },
+            {
+              "fieldId": "node_name",
+              "fieldValue": "Upload to Supabase Storage"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "success"
+            },
+            {
+              "fieldId": "items_count",
+              "fieldValue": 1
+            },
+            {
+              "fieldId": "output_data",
+              "fieldValue": "={{ JSON.stringify({ filename: $('Extract Params').item.json.filename, bucket: $('Extract Params').item.json.bucket, label: $('Extract Params').item.json.label }) }}"
+            }
+          ]
+        }
+      },
+      "id": "a263efb4-6efb-45d5-9a7d-f102431e3034",
+      "name": "Log to Supabase1",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        1008
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "JXd2cOhQ6QEzOXVe",
+          "name": "Supabase"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Supabase Insert Error",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Insert Error": {
+      "main": [
+        []
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Supabase Insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule": {
+      "main": [
+        [
+          {
+            "node": "Set Filename",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Filename": {
+      "main": [
+        [
+          {
+            "node": "Run pg_dump via SSH",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run pg_dump via SSH": {
+      "main": [
+        [
+          {
+            "node": "Set Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Status": {
+      "main": [
+        [
+          {
+            "node": "Log to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract Params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Params": {
+      "main": [
+        [
+          {
+            "node": "Convert to Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to Binary": {
+      "main": [
+        [
+          {
+            "node": "Upload to Supabase Storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to Supabase Storage": {
+      "main": [
+        [
+          {
+            "node": "Build Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log to Supabase1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "0eae0c48-e411-404f-93e5-81eb326d22af",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "efdde4a1bc69b71057bcdf55f6ba95ca3f5f01de8f5cdb71394dc63f3bad5cf9"
+  },
+  "id": "SeHd72wURzGUN62n",
+  "tags": []
+}
