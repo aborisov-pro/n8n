@@ -173,8 +173,9 @@ CREATE TABLE workflow_logs (
 
 ```
 pisec/
-├── README.md     ← этот файл
-└── pisec.json    ← воркфлоу для импорта в n8n
+├── README.md                  ← этот файл
+├── Pisec_Log_Workflows.json   ← воркфлоу для импорта в n8n
+└── screenshot.png             ← схема воркфлоу
 ```
 
 ---
@@ -183,7 +184,7 @@ pisec/
 
 1. Создать таблицу `workflow_logs` в Supabase (DDL выше)
 2. Настроить env-переменные: `SUPABASE_DB_CONN`, `SUPABASE_SERVICE_KEY`
-3. Импортировать: **Settings → Import workflow → `pisec.json`**
+3. Импортировать: **Settings → Import workflow → `Pisec_Log_Workflows.json`**
 4. Заменить плейсхолдеры в нодах (см. таблицу выше)
 5. Настроить credentials: Supabase, Telegram, SSH
 6. **Активировать первым** — до импорта остальных воркфлоу
