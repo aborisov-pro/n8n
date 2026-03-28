@@ -91,16 +91,16 @@ Chat Trigger / Telegram Trigger
 
 ```
 voron/
-├── README.md                          ← этот файл
-├── screenshot.png                     ← схема воркфлоу
-└── Voron__RSS-Feed-Health-Check.json  ← воркфлоу для импорта в n8n
+├── README.md              ← этот файл
+├── Voron_Check_RSS.json   ← воркфлоу для импорта в n8n
+└── screenshot.png         ← схема воркфлоу
 ```
 
 ---
 
 ## Порядок установки
 
-1. Импортировать: **Settings → Import workflow → `Voron__RSS-Feed-Health-Check.json`**
+1. Импортировать: **Settings → Import workflow → `Voron_Check_RSS.json`**
 2. Настроить credential **Telegram Bot API** (название: RSS check)
 3. Активировать воркфлоу
 
