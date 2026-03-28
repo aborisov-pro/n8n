@@ -1,0 +1,249 @@
+{
+  "name": "Поздравлятор в Максе",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Сообщение от пользователя: {{ $json.body.message.body.text }}\n\nИмя отправителя: {{ $json.body.message.sender.first_name }}\n\nТекущая дата: {{ $now.toFormat('d MMMM yyyy') }}",
+        "options": {
+          "systemMessage": "Ты — Поздравлятор, остроумный бот-поздравитель в мессенджере MAX.\n\nПишешь короткое поздравление — как текст на открытке: 3-4 предложения, не больше. \nКак составить поздравление:1. Извлеки из сообщения максимум контекста: кого поздравляют, с чем, профессия, характер, увлечения, отношения. Используй детали — это основа для шутки или меткого наблюдения.\n2. Имя именинника — из сообщения пользователя. Если не указано — используй имя отправителя.\n 3. Праздник — из сообщения. Если не указан — определи ближайший по текущей дате..\n4. Тон: с юмором и лёгкой иронией. Не злой, не пошлый — добрый, но с искрой. Можно пошутить над ситуацией, возрастом, профессией или праздником — если есть зацепка в контексте\n 5. Добавь 1-2 эмодзи по смыслу.\n6. Никаких штампов: «счастья, здоровья, успехов», «пусть сбываются мечты» — под запретом \n\nОтвечай только текстом поздравления. Без преамбул, пояснений и подписей."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        320,
+        0
+      ],
+      "id": "3d4fd1f4-9eb3-47bf-ace7-0f6cffe2287b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "mercury-2",
+          "mode": "list",
+          "cachedResultName": "mercury-2"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        384,
+        224
+      ],
+      "id": "13b5ca2d-bd85-4e7a-b3b0-8b10a232c54c",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "fOZhjzYHGLAqtsKZ",
+          "name": "Меркури"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "max-pozdravlyator",
+        "options": {
+          "responseCode": {
+            "values": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8a82614a-ea03-45d5-b58a-e47dc38e945d",
+      "name": "Webhook",
+      "webhookId": "61459e07-f659-4e6e-9ea2-f2bb1d40d109"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://platform-api.max.ru/messages?chat_id={{ $('Webhook').item.json.body.message.recipient.chat_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": {{ JSON.stringify($json.output) }},\n  \"format\": \"markdown\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "45c82d3b-0312-401e-b4f7-e28416a1d2e4",
+      "name": "Отправить в MAX",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "3pUur3BEDFq5lskg",
+          "name": "Max HEAD"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "l1",
+              "name": "workflow_name",
+              "value": "Поздравлятор в Максе",
+              "type": "string"
+            },
+            {
+              "id": "l2",
+              "name": "workflow_id",
+              "value": "={{ $workflow.id }}",
+              "type": "string"
+            },
+            {
+              "id": "l3",
+              "name": "execution_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "l4",
+              "name": "node_name",
+              "value": "Отправить в MAX",
+              "type": "string"
+            },
+            {
+              "id": "l5",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "l6",
+              "name": "items_count",
+              "value": "=1",
+              "type": "number"
+            },
+            {
+              "id": "l7",
+              "name": "output_data",
+              "value": "={{ $('AI Agent').item.json.output.substring(0, 300) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "629cc2e9-d16e-44ad-b064-d4dc89bd0911",
+      "name": "Set LOG",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "SeHd72wURzGUN62n",
+          "mode": "id"
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "0164c14a-dc5c-4f5e-89c5-da664c9e89af",
+      "name": "LOG через Писец",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        1136,
+        0
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Отправить в MAX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Отправить в MAX": {
+      "main": [
+        [
+          {
+            "node": "Set LOG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set LOG": {
+      "main": [
+        [
+          {
+            "node": "LOG через Писец",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "SeHd72wURzGUN62n",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 600
+  },
+  "versionId": "2d36ef76-8d62-46ab-8ab9-6630555995c2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "efdde4a1bc69b71057bcdf55f6ba95ca3f5f01de8f5cdb71394dc63f3bad5cf9"
+  },
+  "id": "xCan8mpXtkXWXl1L",
+  "tags": []
+}
