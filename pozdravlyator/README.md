@@ -86,9 +86,9 @@
 
 ```
 pozdravlyator/
-├── README.md                         ← этот файл
-├── Поздравлятор_в_Максе.json         ← воркфлоу для импорта в n8n
-└── screenshot.png                    ← скриншот воркфлоу (добавить вручную)
+├── README.md                             ← этот файл
+├── Pozdravlyator_Generate_Greeting.json  ← воркфлоу для импорта в n8n
+└── screenshot.png                        ← скриншот воркфлоу
 ```
 
 ---
@@ -96,7 +96,7 @@ pozdravlyator/
 ## Порядок установки
 
 1. Импортировать и активировать **Писца** (`pisec/pisec.json`)
-2. Импортировать этот воркфлоу: **Settings → Import workflow → `Поздравлятор_в_Максе.json`**
+2. Импортировать этот воркфлоу: **Settings → Import workflow → `Pozdravlyator_Generate_Greeting.json`**
 3. Настроить кредлы: Mercury-2 (Inception API через OpenAI-ноду с кастомным base URL), Макс (HTTP Header Auth)
 4. В Макс Developer Portal зарегистрировать вебхук: `https://<твой-домен>/webhook/max-pozdravlyator`
 5. Активировать воркфлоу
