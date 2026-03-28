@@ -182,6 +182,7 @@ Schedule 7:00 / Telegram Trigger
 | Плейсхолдер | Назначение | Нода |
 |-------------|-----------|------|
 | `YOUR_TELEGRAM_CHAT_ID` | ID чата для отправки дайджеста | TG Погода, TG Новости и др. |
+| `YOUR_YOUTUBE_API_KEY` | API-ключ YouTube Data v3 | YouTube Search |
 | `YOUR_YOUTUBE_CHANNEL_OR_QUERY` | Поисковый запрос для YouTube | YouTube Search |
 
 ---
