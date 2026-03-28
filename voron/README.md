@@ -2,6 +2,10 @@
 
 n8n workflow · 8 nodes · category: infra
 
+## Screenshot
+
+![Voron workflow](screenshot.png)
+
 ## What it does
 
 Accepts a list of URLs (from n8n chat or Telegram), fetches each feed,
@@ -58,6 +62,7 @@ Returns a report: healthy feeds and problematic ones with reasons.
 ```
 voron/
 ├── README.md                          ← this file
+├── screenshot.png                     ← workflow screenshot
 └── Voron__RSS-Feed-Health-Check.json  ← workflow export
 ```
 
