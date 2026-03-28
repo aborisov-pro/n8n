@@ -1,0 +1,1439 @@
+{
+  "name": "Что там у Персов?",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "={{ $json.redisKey }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2080,
+        -16
+      ],
+      "id": "6a505bf3-0c88-409a-a525-23ae616261a8",
+      "name": "Redis: Проверить статью",
+      "credentials": {
+        "redis": {
+          "id": "NPXjpDAAuHYyRxsQ",
+          "name": "Redis account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const redisItems = $input.all();\nconst sourceItems = $('Распаковать кэш').all();\nconst newArticles = [];\n\nfor (let i = 0; i < redisItems.length; i++) {\n  const redisVal = redisItems[i].json.propertyName;\n  const isNew = redisVal === null || redisVal === undefined || redisVal === '';\n  if (isNew && sourceItems[i]) {\n    newArticles.push({ json: sourceItems[i].json });\n  }\n}\n\nif (newArticles.length === 0) {\n  return [{ json: { isEmpty: true, forLLM: '', total: 0 } }];\n}\n\nreturn newArticles;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2336,
+        -16
+      ],
+      "id": "f1270886-70b6-48b7-9054-baf531ec4739",
+      "name": "Фильтр: только новые"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $json.redisKey }}",
+        "value": "1",
+        "expire": true,
+        "ttl": 86400
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        336,
+        592
+      ],
+      "id": "1ec1623f-f7e4-41e5-a42a-620e37374960",
+      "name": "Redis: Запомнить статьи",
+      "credentials": {
+        "redis": {
+          "id": "NPXjpDAAuHYyRxsQ",
+          "name": "Redis account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "let history = [];\ntry {\n  const raw = $('Redis: Читать историю').first().json.propertyName\n           || $('Redis: Читать историю').first().json.value || '';\n  if (raw) history = JSON.parse(raw);\n} catch(e) {\n  history = [];\n}\n\nconst last3 = history.slice(0, 3);\n\nlet historyBlock = '';\nif (last3.length > 0) {\n  historyBlock = '\\n\\n---\\nПРЕДЫДУЩИЕ СЮЖЕТЫ (последние ' + last3.length + ' выпуска, от нового к старому):\\n';\n  last3.forEach((s, i) => {\n    historyBlock += '<entry ' + (i+1) + '>\\nДата: ' + s.date + '\\n';\n    if (s.military)     historyBlock += 'Военные: ' + s.military + '\\n';\n    if (s.hydrocarbons) historyBlock += 'Углеводороды: ' + s.hydrocarbons + '\\n';\n    historyBlock += '</entry ' + (i+1) + '>\\n';\n  });\n  historyBlock += '---';\n}\n\nconst items = $('Предфильтр по теме').all();\nconst validItems = items.filter(i => !i.json.isEmpty);\n\nif (validItems.length === 0) {\n  return [{ json: {\n    isEmpty: true,\n    forLLM: '',\n    total: 0,\n    historyBlock: '',\n    rawHistory: JSON.stringify(history),\n    refMap: '{}'\n  } }];\n}\n\n// Нумеруем статьи. LLM видит только [N] [Источник] Заголовок — без URL.\n// URL хранится в refMap и восстанавливается после ответа LLM.\nconst lines = [];\nconst refMap = {};\n\nvalidItems.forEach((item, idx) => {\n  const num = String(idx + 1);\n  lines.push('[' + num + '] [' + item.json.source + '] ' + item.json.title);\n  refMap[num] = { url: item.json.link, source: item.json.source };\n});\n\nreturn [{ json: {\n  isEmpty: false,\n  forLLM: lines.join('\\n'),\n  total: lines.length,\n  historyBlock,\n  rawHistory: JSON.stringify(history),\n  refMap: JSON.stringify(refMap)\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        784,
+        592
+      ],
+      "id": "a917ec37-0bec-4315-8fc8-6d9015d50ff8",
+      "name": "Сборка в текст"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Парсим ответ LLM (полный текст до разбивки)\nconst fullText = $json.text || '';\n\nconst memMatch = fullText.match(/%%STORY_MEMORY%%([\\s\\S]*?)(?:%%END%%|%%STORY_MEMORY%%|$)/);\nlet military = null;\nlet hydrocarbons = null;\n\nif (memMatch) {\n  const memBlock = memMatch[1];\n  const milMatch = memBlock.match(/MILITARY:\\s*(.+)/);\n  const hydroMatch = memBlock.match(/HYDROCARBONS:\\s*(.+)/);\n  military = milMatch ? milMatch[1].trim() : null;\n  hydrocarbons = hydroMatch ? hydroMatch[1].trim() : null;\n  if (military === 'NONE') military = null;\n  if (hydrocarbons === 'NONE') hydrocarbons = null;\n}\n\nconst cleanText = fullText.replace(/%%STORY_MEMORY%%[\\s\\S]*/g, '').trim();\nconst displayText = cleanText === 'NONE' ? 'Новых новостей нет. Может, оно и к лучшему!' : cleanText;\n// Собираем историю для Redis\nlet history = [];\ntry {\n  const raw = $('Сборка в текст').first().json.rawHistory || '[]';\n  history = JSON.parse(raw);\n} catch(e) {\n  history = [];\n}\n\nif (military || hydrocarbons) {\n  const now = new Date();\n  const dateStr = now.toLocaleDateString('ru-RU', {\n    day: '2-digit', month: '2-digit', year: 'numeric',\n    hour: '2-digit', minute: '2-digit'\n  });\n\n  history.unshift({\n    date: dateStr,\n    military: military || null,\n    hydrocarbons: hydrocarbons || null\n  });\n\n  if (history.length > 20) history = history.slice(0, 20);\n}\n\n// Добавляем котировки\nlet quotesBlock = '';\ntry {\n  quotesBlock = $('Котировки').first().json.quotesBlock || '';\n} catch(e) {}\n\nconst finalText = displayText + quotesBlock;\n\nreturn [{ json: {\n  text: finalText,\n  newHistory: JSON.stringify(history),\n  hasUpdate: !!(military || hydrocarbons)\n} }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2016,
+        592
+      ],
+      "id": "138877db-cfdc-4c6b-8edb-bcf065cc4f13",
+      "name": "Сохранить сюжет"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Нормализация').first().json.message.chat.id }}",
+        "text": "={{ $json.text }}\n<i>(заголовки — дословный перевод)</i>",
+        "replyMarkup": "replyKeyboard",
+        "replyKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🔄 Обновить",
+                    "additionalFields": {}
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "replyKeyboardOptions": {
+          "resize_keyboard": true,
+          "one_time_keyboard": false,
+          "selective": false
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2464,
+        592
+      ],
+      "id": "22baaa10-4b50-4767-8227-cd619f25ad51",
+      "name": "TG: Финальный отчет",
+      "webhookId": "b0faa897-d487-4be7-bbc5-deeef0f371a9",
+      "credentials": {
+        "telegramApi": {
+          "id": "fTNfWYo750WQK0tb",
+          "name": "Иран"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=iran:story_history:{{ $('Нормализация').first().json.message.chat.id }}",
+        "value": "={{ $('Сохранить сюжет').first().json.newHistory }}",
+        "expire": true,
+        "ttl": 86400
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2896,
+        592
+      ],
+      "id": "165b4ebb-75ba-40d9-8ea0-02783ba996c5",
+      "name": "Redis: Запомнить сюжет",
+      "credentials": {
+        "redis": {
+          "id": "NPXjpDAAuHYyRxsQ",
+          "name": "Redis account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        544,
+        32
+      ],
+      "id": "b2f71612-d669-4b7f-9494-37ee6f45c409",
+      "name": "Telegram Trigger",
+      "webhookId": "7d5dc0ba-d4f7-48b7-854d-42639fda3684",
+      "credentials": {
+        "telegramApi": {
+          "id": "fTNfWYo750WQK0tb",
+          "name": "Иран"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "=iran:lastseen:{{ $('Нормализация').first().json.message.chat.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        992,
+        -16
+      ],
+      "id": "724f2ec5-3b45-47a3-9f40-0518f602131c",
+      "name": "Redis: Читать lastSeen",
+      "credentials": {
+        "redis": {
+          "id": "NPXjpDAAuHYyRxsQ",
+          "name": "Redis account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "=iran:story_history:{{ $('Нормализация').first().json.message.chat.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        560,
+        592
+      ],
+      "id": "c529ff87-65d1-4bfc-a26a-0507cc59279b",
+      "name": "Redis: Читать историю",
+      "credentials": {
+        "redis": {
+          "id": "NPXjpDAAuHYyRxsQ",
+          "name": "Redis account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Нормализация').first().json.message.chat.id }}",
+        "text": "={{ $('Нормализация').first().json.message.from.first_name }}, собираю свежие обновления по Ирану. Последний запрос: {{ $('Redis: Читать lastSeen').first().json.propertyName ? (() => { const diff = Date.now() - parseInt($('Redis: Читать lastSeen').first().json.propertyName, 10); const mins = Math.floor(diff / 60000); if (mins < 60) return mins + ' мин. назад'; const hrs = Math.floor(mins / 60); const rm = mins % 60; return hrs + ' ч. ' + (rm > 0 ? rm + ' мин. ' : '') + 'назад'; })() : 'первый раз' }}. Ищу изменения, нужно около двух минут",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1216,
+        -16
+      ],
+      "id": "a117b87e-753d-4216-8ce9-14a4a69cc1ed",
+      "name": "Приветствие",
+      "webhookId": "21b01810-75b5-4d4d-bcad-977de3a57483",
+      "credentials": {
+        "telegramApi": {
+          "id": "fTNfWYo750WQK0tb",
+          "name": "Иран"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const keywords = {\n  core: [\n    'iran', 'иран', 'tehran', 'тегеран', 'irgc', 'ксир', 'khamenei', 'хаменеи',\n    'hormuz', 'ормуз', 'persian gulf', 'персидский залив', 'gulf', 'залив',\n    'strait of hormuz', 'middle east', 'ближний восток'\n  ],\n  regional: [\n    'saudi', 'сауд', 'riyadh', 'эр-рияд', 'aramco', 'uae', 'оаэ', 'abu dhabi', 'абу-даби',\n    'dubai', 'дубай', 'qatar', 'катар', 'bahrain', 'бахрейн', 'kuwait', 'кувейт',\n    'oman', 'оман', 'yemen', 'йемен', 'houthi', 'хусит', 'hezbollah', 'хезболл', 'lebanon', 'ливан'\n  ],\n  energy: [\n    'oil', 'нефт', 'brent', 'wti', 'crude', 'lng', 'спг', 'gas', 'газ',\n    'tanker', 'танкер', 'opec', 'опек', 'refinery', 'нпз', 'shipping', 'морские поставки'\n  ],\n  military: [\n    'missile', 'ракет', 'drone', 'дрон', 'беспилот', 'intercept', 'перехват',\n    'air defense', 'пво', 'strike', 'удар', 'airstrike', 'авиаудар',\n    'warship', 'военный корабль', 'submarine', 'подлод', 'navy', 'флот'\n  ]\n};\n\nconst items = $('Фильтр: только новые').all();\nconst filtered = [];\n\nconst scoreText = (text) => {\n  const t = String(text || '').toLowerCase();\n  let score = 0;\n\n  for (const kw of keywords.core) if (t.includes(kw)) score += 4;\n  for (const kw of keywords.regional) if (t.includes(kw)) score += 2;\n  for (const kw of keywords.energy) if (t.includes(kw)) score += 2;\n  for (const kw of keywords.military) if (t.includes(kw)) score += 2;\n\n  return score;\n};\n\nfor (const item of items) {\n  if (item.json.isEmpty) continue;\n\n  const title = item.json.title || '';\n  const source = item.json.source || '';\n  const description = item.json.description || '';\n\n  let score = 0;\n  score += scoreText(title) * 2;\n  score += scoreText(description);\n  score += scoreText(source);\n\n  const titleLc = title.toLowerCase();\n\n  const hardAllow = /\\b(iran|tehran|irgc|khamenei|hormuz|оаэ|qatar|kuwait|bahrain|aramco|brent|wti|opec|houthi|hezbollah|иран|тегеран|ксир|ормуз|залив)\\b/i.test(titleLc);\n  const hardReject = /(soccer|football|movie|celebrity|weather|school|festival|recipes)/i.test(titleLc);\n\n  if (hardReject) continue;\n  if (hardAllow || score >= 6) filtered.push(item);\n}\n\nif (filtered.length === 0) {\n  return [{ json: { isEmpty: true } }];\n}\n\nreturn filtered;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3216,
+        -16
+      ],
+      "id": "9d3b7bf0-9941-460d-8fb0-acde00c406ed",
+      "name": "Предфильтр по теме"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Telegram лимит — 4096 символов\nconst MAX_LEN = 4000; // с запасом\n\nconst input = $input.first().json;\nlet text = input.text || input.response || '';\n\n// === Санитизация HTML для Telegram ===\n\n// 1. Убираем <URL> без тега a (Квен иногда так делает)\ntext = text.replace(/<(https?:\\/\\/[^>]+)>/g, '$1');\n\n// 2. Чиним незакрытые <a> теги\nconst openA = (text.match(/<a\\s/gi) || []).length;\nconst closeA = (text.match(/<\\/a>/gi) || []).length;\nif (openA > closeA) {\n  text = text.replace(/<a\\s+href=\"[^\"]*\">[^<]*$/gm, '');\n}\n\n// 3. Закрываем незакрытые <b>\nconst openB = (text.match(/<b>/gi) || []).length;\nconst closeB = (text.match(/<\\/b>/gi) || []).length;\nif (openB > closeB) {\n  for (let i = 0; i < openB - closeB; i++) text += '</b>';\n}\n\n// 4. Убираем любые HTML-теги кроме разрешённых Telegram: b, i, a, code, pre\ntext = text.replace(/<\\/?(?!b>|\\/b>|i>|\\/i>|a[\\s>]|\\/a>|code>|\\/code>|pre>|\\/pre>)[^>]+>/gi, '');\n\n// 5. Обрезанные теги в конце\ntext = text.replace(/<[^>]*$/, '');\n\n// 6. Убираем Markdown-звёздочки: **текст** → <b>текст</b>\ntext = text.replace(/\\*\\*([^*]+)\\*\\*/g, '<b>$1</b>');\n\n// === Разбивка на чанки ===\n\nif (!text || text.length <= MAX_LEN) {\n  return [{ json: { text, part: 1, totalParts: 1 } }];\n}\n\nconst lines = text.split('\\n');\nconst chunks = [];\nlet current = '';\n\nfor (const line of lines) {\n  if (line.length > MAX_LEN) {\n    if (current) {\n      chunks.push(current);\n      current = '';\n    }\n    chunks.push(line.substring(0, MAX_LEN));\n    continue;\n  }\n\n  if ((current + '\\n' + line).length > MAX_LEN) {\n    chunks.push(current);\n    current = line;\n  } else {\n    current = current ? current + '\\n' + line : line;\n  }\n}\n\nif (current) {\n  chunks.push(current);\n}\n\nconst totalParts = chunks.length;\nreturn chunks.map((chunk, i) => ({\n  json: {\n    text: totalParts > 1\n      ? chunk + `\\n\\n📄 ${i + 1}/${totalParts}`\n      : chunk,\n    part: i + 1,\n    totalParts\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        592
+      ],
+      "id": "a2e28dbf-fd25-4974-b389-1957ce2329a2",
+      "name": "Разбивка TG"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=📊 Контекст: {{ $('Котировки').first().json.quotesPromptLine }}\n\nЗаголовки (формат: [N] [Источник] Заголовок):\n{{ $json.forLLM }}\n{{ $json.historyBlock }}\n\n═══ СТРУКТУРА ОТВЕТА ═══\n\n2–3 тезиса через точку. Только факты. Очень сжато\n\n<b>🌍 Международные источники:</b>\nТолько собственные действия нейтральных стран: перехваты, потери, эвакуации, решения.\nНЕ включать пересказ чужих заявлений нейтральным источником.\n- ДОСЛОВНЫЙ ПЕРЕВОД [N]\n\n<b>🔵 НАТО и союзники:</b>\n- ДОСЛОВНЫЙ ПЕРЕВОД [N]\n- ⚠️ ДОСЛОВНЫЙ ПЕРЕВОД [N]\n\n<b>🟢 Иран и союзники:</b>\n- ДОСЛОВНЫЙ ПЕРЕВОД [N]\n- ⚠️ ДОСЛОВНЫЙ ПЕРЕВОД [N]\n\n<b>🛢 Нефть/газ:</b>\nТолько факты с цифрами: цены, объёмы, маршруты, блокады, страхование.\n- ДОСЛОВНЫЙ ПЕРЕВОД [N]\n\n<b>🎙 Заявления:</b>\nТОЛЬКО прямые публичные высказывания строго 6 персон по теме Ирана/Залива:\nПутин, Трамп, Хегсет, Аракчи (МИД Ирана), Пезешкиан (президент Ирана), Аятолла.\nЗаявления любых других лиц — не включать.\n- ДОСЛОВНЫЙ ПЕРЕВОД [N]\n\nПРАВИЛА:\n- Не более 5 заголовков от одного источника в итоговом ответе. Проверить, чтобы каждый источник участвовал не более 5 раз в ответе\n- [N] строго из входных данных, не придумывать\n- URL и href запрещены в теле ответа\n- Если 2+ заголовка об одном событии (даже от разных источников) — оставить ОДИН самый информативный. Одинаковое событие с разных источников = один пункт\n- Пустой раздел не писать\n- НЕ создавать раздел 📊 Котировки\n- Если ничего релевантного нет — ответить только: NONE\n\n%%STORY_MEMORY%%\nMILITARY: [краткая сводка одной строкой или NONE]\nHYDROCARBONS: [краткая сводка одной строкой или NONE]\n%%END%%",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Ты аналитик-телеграфист. Весь ответ ТОЛЬКО на русском языке. Ни одного предложения на английском — переводи дословно.\n\nПРОХОД 1 — ЧТЕНИЕ: Прочитай все заголовки.\nПРОХОД 2 — КЛАССИФИКАЦИЯ ИСТОЧНИКА:\n\n  БЛОК «НАТО и союзники»:\n  Медиа: Reuters, AP, AFP, BBC, CNN, NYT, New York Times, Washington Post, Guardian, NPR, CNBC, Fox News, Breaking Defense, Al Jazeera English, CBS, NBC, ABC, Axios, Time Magazine, France 24, Financial Times, FT\n  Страны/источники: США, Британия, Франция, Израиль, Австралия, Канада и их официальные источники\n\n  БЛОК «Иран и союзники»:\n  Pars Today, IRNA, Press TV, Tasnim, Fars News, Mehr News и официальные иранские источники\n\n  БЛОК «Нейтральные источники»:\n  RT, ТАСС, РИА, РБК, Xinhua, CGTN, SCMP, Yonhap, NDTV, Al Arabiya, Arab News, Saudi Gazette, Asharq Al-Awsat, Middle East Monitor, Gulf News, Sputnik\n  Страны: Россия, Китай, Индия, Южная Корея, ОАЭ, Саудовская Аравия, Катар, Кувейт, Бахрейн, Турция, Азербайджан, Бразилия\n\nПРОХОД 3 — ЖЁСТКИЙ ОТБОР:\n\n✅ ВКЛЮЧАЙ:\n  — Конкретные физические события: удары, перехваты, потери кораблей/самолётов, взрывы, пожары, блокады, эвакуации, изменения военного присутствия\n  — Ценовые факты с цифрами: %, $, €, баррели, объёмы, маршруты, страхование\n  — Прямые официальные заявления СТРОГО 6 персон (в раздел 🎙): Путин, Трамп, Хегсет, Аракчи, Пезешкиан, аятолла\n\nЛИМИТ ИСТОЧНИКОВ:\n  — Не более 5 заголовков от одного источника в итоговом ответе\n  — Если от одного источника поступило 10 одинаково важных новостей — оставь 5 наиболее информативных\n  — Приоритет: конкретные факты с цифрами > общие события > заявления\n\nПРОХОД 2.5 — ДЕДУПЛИКАЦИЯ:\n  — Сгруппировать заголовки по событию (один удар = одно событие, даже если 5 источников написали)\n  — От каждого события оставить ОДИН заголовок — самый конкретный (с цифрами, именами, фактами)\n  — Остальные дубли — удалить до классификации\n❌ УДАЛЯТЬ БЕЗУСЛОВНО:\n\nПЕРЕСКАЗ ЧУЖИХ СЛОВ нейтральными источниками:\n  — Если нейтральный источник (RT, РБК, Asharq Al-Awsat и др.) пересказывает заявление участника конфликта — УДАЛИТЬ\n  — Признак пересказа: «заявил», «сообщил», «по данным», «по словам», «обвиняет», «призывает», «требует», «объяснил» в сочетании с именем лидера или страны-участницы\n  — Исключение: нейтральный источник сообщает о действиях СВОЕЙ страны (Саудовская Аравия сбила дрон, Катар перехватил ракету) — ОСТАВИТЬ\n\nЗАЯВЛЕНИЯ О ПРОТИВНИКЕ — ПОМЕТИТЬ ⚠️:\n  — Сторона А сообщает об ударе/уничтожении/победе над стороной Б → ⚠️\n  — Сторона сообщает о СВОИХ потерях или решениях → ⚠️ не нужен\n\nУДАЛЯТЬ БЕЗУСЛОВНО:\n  — Прогнозы, аналитика: could, may, might, expected, forecast, analysts, по мнению, эксперты\n  — Некрологи, human interest: биографии, личные истории военных\n  — Пустые заявления без действия: vows, pledges, calls for, urges, обещает, призывает\n\nФОРМАТ:\n  — Только HTML-тег <b>. ЗАПРЕЩЕНО: <a>, href, URL в теле ответа\n  — После каждого заголовка — ТОЛЬКО номер [N] из входных данных\n  — Пример строки: - Саудовская Аравия уничтожила 9 дронов и две крылатые ракеты [12]\n  — Пример строки: - ⚠️ Трамп потребовал безоговорочной капитуляции Ирана [3]"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        1216,
+        592
+      ],
+      "id": "448a99aa-8558-43e3-b975-daa5003c966e",
+      "name": "Общий разбор"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Ручной запуск: подставляем chatId и имя\nreturn [{\n  json: {\n    message: {\n      chat: { id: 796561380 },\n      from: { first_name: 'Ручной запуск' },\n      text: '🔄 Обновить'\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        -112
+      ],
+      "id": "d4c938a6-628e-47ef-a8d8-bcff0ebb7192",
+      "name": "Подмена чата"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Пробрасываем данные чата (от TG Trigger или ручного запуска)\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        -16
+      ],
+      "id": "e72c1f25-bdf0-431e-a3be-747d0de54750",
+      "name": "Нормализация"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nlet text = input.text || '';\n\nlet refMap = {};\ntry {\n  const raw = $('Сборка в текст').first().json.refMap || '{}';\n  refMap = JSON.parse(raw);\n} catch(e) {}\n\nconst lines = text.split('\\n');\nconst filtered = [];\n\nfor (const line of lines) {\n  const trimmed = line.trim();\n\n  if (!trimmed.startsWith('-')) {\n    filtered.push(line);\n    continue;\n  }\n\n  let skip = false;\n\n  // === ФИЛЬТР ГАЛЛЮЦИНАЦИЙ ===\n  // Если в строке есть [N] — все они должны существовать в refMap\n  // Если [N] нет совсем — строка тоже подозрительна (LLM не сослался ни на что)\n  if (!skip) {\n    const refNums = trimmed.match(/\\[(\\d+)\\]/g);\n    if (refNums) {\n      const allValid = refNums.every(r => refMap[r.replace(/[\\[\\]]/g, '')]);\n      if (!allValid) skip = true;\n    } else {\n      // Нет номеров совсем — галлюцинация без ссылки, пропускаем\n      skip = true;\n    }\n  }\n\n  // === УДАЛЯЕМ СТРОКИ С ⚠️ — заявления одной стороны о другой ===\n  if (!skip && /^-\\s*⚠️/.test(trimmed)) {\n    skip = true;\n  }\n\n  // === ПРОПАГАНДА (страховка если LLM забыл ⚠️) ===\n  if (!skip) {\n    const propagandaPatterns = [\n \n    ];\n    for (const pat of propagandaPatterns) {\n      if (pat.test(trimmed)) { skip = true; break; }\n    }\n  }\n\n  // === ИСТОЧНИКИ ПРОПАГАНДЫ ===\n  if (!skip) {\n    const isParsToday = /pars.?today|press.?tv/i.test(trimmed);\n    if (isParsToday) {\n      const isSelfReport = /иран.*потерял|иран.*погиб|иран.*признал|iran.*lost|iran.*killed|iran.*damage/i.test(trimmed);\n      if (!isSelfReport) skip = true;\n    }\n  }\n\n  // === АНАЛИТИКА И ПРОГНОЗЫ ===\n  if (!skip) {\n    const opinionPatterns = [\n      /прогноз.*цен/i, /повышает прогноз/i, /прогнозируется/i,\n      /forecast.*barrel/i, /hikes.*forecast/i,\n      /could rise/i, /could help/i, /\\bcould\\b/i, /\\bmight\\b/i,\n      /может вырасти/i, /могут вырасти/i, /ожидается рост/i,\n      /expected.*rise/i, /tipped.*rise/i, /\\boutlook\\b/i,\n      /по мнению/i, /эксперты полагают/i, /according to sources/i,\n      /analysts say/i, /аналитики считают/i, /\\banalysis\\b/i,\n      /узнал[аи]?\\b/i, /выяснил[аи]?\\b/i, /learned why/i,\n    ];\n    for (const pat of opinionPatterns) {\n      if (pat.test(trimmed)) { skip = true; break; }\n    }\n  }\n\n  // === HUMAN INTEREST / НЕКРОЛОГИ ===\n  if (!skip) {\n    const humanInterestPatterns = [\n      /remembered as/i, /loving parents/i, /dedicated students/i,\n      /made.*history/i, /one beer/i, /back on duty/i, /raf history/i,\n      /still alive/i, /всё ещё жив/i, /всё еще жив/i,\n    ];\n    for (const pat of humanInterestPatterns) {\n      if (pat.test(trimmed)) { skip = true; break; }\n    }\n  }\n\n  // === ПУСТЫЕ ЗАЯВЛЕНИЯ БЕЗ ДЕЙСТВИЯ ===\n  if (!skip) {\n    const emptyClaimsPatterns = [\n      /vows.*secure.*oil/i, /vows.*route/i, /обещает.*маршрут/i,\n      /calls for restraint/i, /urges dialogue/i, /призывает к/i,\n      /предупреждение о безопасности/i, /security alert/i,\n    ];\n    for (const pat of emptyClaimsPatterns) {\n      if (pat.test(trimmed)) { skip = true; break; }\n    }\n  }\n\n  // === РОССИЙСКО-УКРАИНСКИЙ ОФФТОПИК ===\n  if (!skip) {\n    const isRuUa = /над россией|над российскими|саратовск|украинск.*дрон|сбили.*беспилотник.*росси|российских регион/i.test(trimmed);\n    const isIran = /иран|ормуз|hormuz|залив|gulf|нефт|oil|газ|lng|спг|танкер|саудовск|saudi|оаэ|uae|бахрейн|кувейт|ближн.*восток|middle east|санкц|эмбарго|дипломат|оон|совбез/i.test(trimmed);\n    if (isRuUa && !isIran) skip = true;\n  }\n\n  if (!skip) filtered.push(line);\n}\n\n// Убираем пустые разделы\nconst sectionHeaderRe = /^\\s*<b>[^<]+<\\/b>\\s*$/;\nconst cleaned = [];\n\nfor (let i = 0; i < filtered.length; i++) {\n  const trimmed = filtered[i].trim();\n  if (sectionHeaderRe.test(trimmed)) {\n    let hasBullet = false;\n    for (let j = i + 1; j < filtered.length; j++) {\n      const next = filtered[j].trim();\n      if (next.startsWith('-')) { hasBullet = true; break; }\n      if (sectionHeaderRe.test(next)) break;\n    }\n    if (hasBullet) cleaned.push(filtered[i]);\n  } else {\n    cleaned.push(filtered[i]);\n  }\n}\n\nlet result = cleaned.join('\\n');\nresult = result.replace(/\\n{3,}/g, '\\n\\n').trim();\n\nif (!result.match(/^\\s*-/m) && !result.includes('\\n-')) {\n  result = 'NONE';\n}\n\nreturn [{ json: { ...input, text: result } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        592
+      ],
+      "id": "8fda6b51-0900-4e8c-be6b-299466fb3d9b",
+      "name": "Постфильтр"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "=iran:quotes:{{ $('Нормализация').first().json.message.chat.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2768,
+        -16
+      ],
+      "id": "32625608-24ff-4e14-91e6-a227959b9cf1",
+      "name": "Redis: Пред. котировки",
+      "credentials": {
+        "redis": {
+          "id": "NPXjpDAAuHYyRxsQ",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Котировки Brent и TTF газ\nconst headers = { 'User-Agent': 'Mozilla/5.0' };\nlet brent = { current: null, prevDay: null, march1: null };\nlet ttf = { current: null, prevDay: null, march1: null };\n\nconst march1ts = new Date('2026-03-01T00:00:00Z').getTime() / 1000;\n\n// Ищем ближайшую цену к дате\nconst findClosest = (timestamps, closes, targetTs) => {\n  let best = null;\n  let bestDiff = Infinity;\n  for (let i = 0; i < timestamps.length; i++) {\n    if (closes[i] === null) continue;\n    const diff = Math.abs(timestamps[i] - targetTs);\n    if (diff < bestDiff) { bestDiff = diff; best = closes[i]; }\n  }\n  return best;\n};\n\ntry {\n  const bResp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: 'https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?interval=1d&range=1mo',\n    headers, json: true,\n  });\n  const r = bResp.chart.result[0];\n  const ts = r.timestamp || [];\n  const cl = r.indicators.quote[0].close || [];\n  const valid = cl.filter(c => c !== null);\n  brent.current = valid[valid.length - 1];\n  brent.prevDay = valid.length >= 2 ? valid[valid.length - 2] : null;\n  brent.march1 = findClosest(ts, cl, march1ts);\n} catch(e) {}\n\ntry {\n  const tResp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: 'https://query1.finance.yahoo.com/v8/finance/chart/TTF=F?interval=1d&range=1mo',\n    headers, json: true,\n  });\n  const r = tResp.chart.result[0];\n  const ts = r.timestamp || [];\n  const cl = r.indicators.quote[0].close || [];\n  const valid = cl.filter(c => c !== null);\n  ttf.current = valid[valid.length - 1];\n  ttf.prevDay = valid.length >= 2 ? valid[valid.length - 2] : null;\n  ttf.march1 = findClosest(ts, cl, march1ts);\n} catch(e) {}\n\n// Предыдущие котировки из Redis\nlet prevBrent = null;\nlet prevTtf = null;\ntry {\n  const rd = $('Redis: Пред. котировки').first().json;\n  const raw = rd.propertyName || rd.value || '';\n  if (raw) {\n    const p = JSON.parse(raw);\n    prevBrent = p.brent || null;\n    prevTtf = p.ttf || null;\n  }\n} catch(e) {}\n\nconst fmt = (v) => v !== null ? Number(v).toFixed(2) : '—';\nconst pct = (cur, prev) => {\n  if (!cur || !prev) return null;\n  return ((cur - prev) / prev * 100).toFixed(1);\n};\nconst tag = (val) => {\n  if (val === null) return '';\n  const n = parseFloat(val);\n  const arrow = n >= 0 ? '📈' : '📉';\n  const sign = n >= 0 ? '+' : '';\n  return arrow + sign + val + '%';\n};\n\n// Формируем строки\nconst brentParts = ['🛢 Brent: <b>$' + fmt(brent.current) + '</b>'];\nconst bDay = pct(brent.current, brent.prevDay);\nif (bDay !== null) brentParts.push(tag(bDay) + ' за день');\nconst bMar = pct(brent.current, brent.march1);\nif (bMar !== null) brentParts.push(tag(bMar) + ' с 1 мар');\n\nconst ttfParts = ['🔥 Газ TTF: <b>€' + fmt(ttf.current) + '</b>'];\nconst tDay = pct(ttf.current, ttf.prevDay);\nif (tDay !== null) ttfParts.push(tag(tDay) + ' за день');\nconst tMar = pct(ttf.current, ttf.march1);\nif (tMar !== null) ttfParts.push(tag(tMar) + ' с 1 мар');\n\nconst block = '\\n\\n📊 <b>Котировки:</b>\\n' + brentParts.join(' | ') + '\\n' + ttfParts.join(' | ');\n\n// Для промпта LLM — чистый текст без HTML\nconst promptLine = 'Brent: $' + fmt(brent.current) +\n  (bMar !== null ? ' (' + (parseFloat(bMar) >= 0 ? '+' : '') + bMar + '% с 1 марта)' : '') +\n  ', газ TTF: €' + fmt(ttf.current) +\n  (tMar !== null ? ' (' + (parseFloat(tMar) >= 0 ? '+' : '') + tMar + '% с 1 марта)' : '');\n\nreturn [{ json: {\n  quotesBlock: block,\n  quotesPromptLine: promptLine,\n  brentCurrent: brent.current,\n  ttfCurrent: ttf.current,\n} }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2992,
+        -16
+      ],
+      "id": "f57a66f0-3745-4fec-9710-b5be28afc3d6",
+      "name": "Котировки",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=iran:quotes:{{ $('Нормализация').first().json.message.chat.id }}",
+        "value": "={{ JSON.stringify({ brent: $('Котировки').first().json.brentCurrent, ttf: $('Котировки').first().json.ttfCurrent, ts: Date.now() }) }}",
+        "expire": true,
+        "ttl": 604800
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2896,
+        400
+      ],
+      "id": "0cbfbc7a-0cfb-42c5-bae8-09af341578ab",
+      "name": "Redis: Сохранить котировки",
+      "credentials": {
+        "redis": {
+          "id": "NPXjpDAAuHYyRxsQ",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nlet text = input.text || '';\n\nlet refMap = {};\ntry {\n  const raw = $('Сборка в текст').first().json.refMap || '{}';\n  refMap = JSON.parse(raw);\n} catch(e) {}\n\n// Заменяем [N] на ссылку. Если номер не найден в refMap — убираем [N] полностью.\ntext = text.replace(/\\[(\\d+)\\]/g, (match, num) => {\n  const ref = refMap[num];\n  if (ref && ref.url) {\n    return '(<a href=\"' + ref.url + '\">' + ref.source + '</a>)';\n  }\n  // Номер не найден в refMap — LLM галлюцинация, убираем тег\n  return '';\n});\n\n// Чистим двойные пробелы которые могут остаться после удаления [N]\ntext = text.replace(/  +/g, ' ').trim();\n\nreturn [{ json: { ...input, text } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        592
+      ],
+      "id": "bfceab77-6291-4af8-8abc-62c1a18a0c9b",
+      "name": "Восстановление ссылок"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "=iran:reqcount:{{ $('Нормализация').first().json.message.chat.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2896,
+        976
+      ],
+      "id": "b33155a9-4c3f-44e6-8683-3aaca63aed56",
+      "name": "Redis: Читать счётчик",
+      "credentials": {
+        "redis": {
+          "id": "NPXjpDAAuHYyRxsQ",
+          "name": "Redis account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.propertyName;\nconst prev = (raw && !isNaN(parseInt(raw))) ? parseInt(raw) : 0;\nconst current = prev + 1;\nconst shouldPromo = current % 3 === 0;\n\nlet promoText = '';\nif (shouldPromo) {\n  const cycle = current / 3; // 1, 2, 3, 4...\n  \n  if (cycle === 1) {\n    promoText = 'Кстати, я пишу о том, как сделать подобных ботов. '\n      + 'Буду рад подписке - @aborisov_pro';\n  } else if (cycle === 2) {\n    promoText = 'Напоминаю, у меня есть канал для тех, кто хочет '\n      + 'делать подобных ботов - @aborisov_pro';\n  } else {\n    promoText = 'Канал автора бота - @aborisov_pro';\n  }\n}\n\nreturn [{ json: { counter: current, shouldPromo, promoText } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3120,
+        976
+      ],
+      "id": "84237e79-df27-4c21-a107-4699288317fc",
+      "name": "Проверка счётчика"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=iran:reqcount:{{ $('Нормализация').first().json.message.chat.id }}",
+        "value": "={{ String($json.counter) }}",
+        "keyType": "string",
+        "expire": true,
+        "ttl": 2592000
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        3344,
+        976
+      ],
+      "id": "98253643-f979-4386-b547-6d7d5070e2af",
+      "name": "Redis: Сохранить счётчик",
+      "credentials": {
+        "redis": {
+          "id": "NPXjpDAAuHYyRxsQ",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "0f9352e2-b207-4220-8ddc-d66ad6af8b66",
+              "leftValue": "={{ $json.shouldPromo }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3568,
+        976
+      ],
+      "id": "70a46882-b187-4bbf-9853-139cfa041e11",
+      "name": "Третий запрос?"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Нормализация').first().json.message.chat.id }}",
+        "text": "={{ $('Проверка счётчика').item.json.promoText }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3776,
+        800
+      ],
+      "id": "ceaa2fb3-751b-4fbf-a173-e771865684e7",
+      "name": "TG: Промо",
+      "webhookId": "30e0d990-5837-46a6-914c-733166135b6d",
+      "credentials": {
+        "telegramApi": {
+          "id": "fTNfWYo750WQK0tb",
+          "name": "Иран"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=iran:lastseen:{{ $('Нормализация').first().json.message.chat.id }}",
+        "value": "={{ String(Date.now()) }}",
+        "keyType": "string",
+        "expire": true,
+        "ttl": 2592000
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2896,
+        784
+      ],
+      "id": "f0190659-7f70-457b-bd10-ea82b6287316",
+      "name": "Redis: Обновить lastSeen",
+      "credentials": {
+        "redis": {
+          "id": "NPXjpDAAuHYyRxsQ",
+          "name": "Redis account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        320,
+        -112
+      ],
+      "id": "5f570dc1-12bc-48f7-b7d9-2ef9da38508b",
+      "name": "Ручной запуск"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "mercury-2",
+          "mode": "list",
+          "cachedResultName": "mercury-2"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1008,
+        800
+      ],
+      "id": "049d1120-5d22-48c8-be0e-8b6a1dd16471",
+      "name": "OpenAI Chat Model",
+      "executeOnce": false,
+      "retryOnFail": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "fOZhjzYHGLAqtsKZ",
+          "name": "Меркури"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const FEEDS = [\n  // === Иран / регион — прямое покрытие ===\n  { label: '🇮🇷 Pars Today',           url: 'https://parstoday.ir/en/rss' },\n  { label: '🇮🇷 Tehran Times',         url: 'https://www.tehrantimes.com/rss' },\n  { label: '🇵🇸 Middle East Monitor',  url: 'https://www.middleeastmonitor.com/feed/' },\n  { label: '🇦🇪 Arabian Post',         url: 'https://thearabianpost.com/feed/' },\n  { label: '🇸🇦 Asharq Al-Awsat',      url: 'https://english.aawsat.com/feed' },\n  { label: '🇸🇦 Arab News',            url: 'https://www.arabnews.com/rss.xml' },\n  { label: '🇶🇦 Al Jazeera',           url: 'https://www.aljazeera.com/xml/rss/all.xml' },\n\n  // === Wire-агентства (первоисточники) ===\n  { label: '📡 Reuters',               url: 'https://feeds.reuters.com/reuters/topNews' },\n\n  // === Западные СМИ — World-разделы ===\n  { label: '🇬🇧 BBC World',            url: 'https://feeds.bbci.co.uk/news/world/rss.xml' },\n  { label: '🇬🇧 Guardian World',       url: 'https://www.theguardian.com/world/rss' },\n  { label: '🇺🇸 NYT US',              url: 'https://rss.nytimes.com/services/xml/rss/nyt/US.xml' },\n  { label: '🇺🇸 WashPost',            url: 'https://feeds.washingtonpost.com/rss/national' },\n  { label: '🇺🇸 NPR',                 url: 'https://feeds.npr.org/1003/rss.xml' },\n  { label: '🇺🇸 ABC News',            url: 'https://abcnews.go.com/abcnews/usheadlines' },\n\n  // === Нейтральные / незападные ===\n  { label: '🇷🇺 RT',                  url: 'https://www.rt.com/rss/news/' },\n  { label: '🇷🇺 RBC',                 url: 'https://rssexport.rbc.ru/rbcnews/news/30/full.rss' },\n  { label: '🇨🇳 SCMP',               url: 'https://www.scmp.com/rss/2/feed' },\n  { label: '🇨🇳 Global Times',        url: 'https://www.globaltimes.cn/rss/outbrain.xml' },\n  { label: '🇮🇳 NDTV',               url: 'https://feeds.feedburner.com/ndtvnews-india-news' },\n  { label: '🇮🇳 Times of India',      url: 'https://timesofindia.indiatimes.com/rssfeeds/-2128936835.cms' },\n  { label: '🇰🇷 Yonhap',             url: 'https://en.yna.co.kr/RSS/national.xml' },\n\n  // === Энергетика / нефть ===\n  { label: '📈 Investing.com Oil',    url: 'https://www.investing.com/rss/news_11.rss' },\n  { label: '📈 Investing.com Cmdt',   url: 'https://www.investing.com/rss/news_301.rss' },\n  { label: '📈 OilPrice.com',         url: 'https://oilprice.com/rss/main' },\n];\n\nconst seed = Date.now();\nlet s = seed;\nconst rand = () => {\n  s = (s * 1664525 + 1013904223) & 0xffffffff;\n  return (s >>> 0) / 0xffffffff;\n};\n\nfor (let i = FEEDS.length - 1; i > 0; i--) {\n  const j = Math.floor(rand() * (i + 1));\n  [FEEDS[i], FEEDS[j]] = [FEEDS[j], FEEDS[i]];\n}\n\nreturn FEEDS.map(f => ({ json: f }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        -560
+      ],
+      "id": "2f1a90c7-3484-4453-9314-f30467ae7b80",
+      "name": "Список лент"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/121.0.0.0 Safari/537.36"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1296,
+        -560
+      ],
+      "id": "08019a8f-7092-4777-863f-e5484af34d2b",
+      "name": "Запрос RSS",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// === Collector-версия: без зависимости от Нормализация / Redis: Читать lastSeen ===\n// Берём статьи за последние 3 часа (перекрываем 15-минутные запуски с запасом)\n\nconst httpItems = $input.all();\nconst feedItems = $('Список лент').all();\n\nconst now = Date.now();\nconst cutoffMs = now - 3 * 60 * 60 * 1000; // 3 часа назад\n\nconst GOOGLE_LABEL = '🔍 Google: Iran 24h';\nconst GOOGLE_LIMIT = 4;\n\nconst results = [];\nconst googleBuffer = [];\nconst seenUrls = new Set();\nconst seenTitleKeys = new Set();\n\nconst decodeHtml = (s = '') => s\n  .replace(/<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>/gi, '$1')\n  .replace(/&amp;/g, '&')\n  .replace(/&lt;/g, '<')\n  .replace(/&gt;/g, '>')\n  .replace(/&quot;/g, '\"')\n  .replace(/&#39;/g, \"'\")\n  .replace(/&nbsp;/g, ' ')\n  .trim();\n\nconst stripTags = (s = '') => decodeHtml(String(s).replace(/<[^>]*>/g, ' ')).replace(/\\s+/g, ' ').trim();\n\nconst tagText = (content, tagNames) => {\n  for (const tag of tagNames) {\n    const safeTag = tag.replace(/[-/\\\\^$*+?.()|[\\]{}]/g, '\\\\$&');\n    const re = new RegExp(`<${safeTag}[^>]*>([\\\\s\\\\S]*?)<\\\\/${safeTag}>`, 'i');\n    const m = content.match(re);\n    if (m && m[1]) {\n      const cleaned = stripTags(m[1]);\n      if (cleaned) return cleaned;\n    }\n  }\n  return null;\n};\n\nconst extractLink = (content) => {\n  const atomAlt = content.match(/<link[^>]*\\brel=[\"']alternate[\"'][^>]*\\bhref=[\"']([^\"']+)[\"']/i);\n  if (atomAlt?.[1]) return atomAlt[1].trim();\n  const atomAny = content.match(/<link[^>]*\\bhref=[\"']([^\"']+)[\"']/i);\n  if (atomAny?.[1]) return atomAny[1].trim();\n  const rssLink = tagText(content, ['link', 'guid', 'id']);\n  if (rssLink && /^https?:\\/\\//i.test(rssLink)) return rssLink;\n  return null;\n};\n\nconst normalizeUrl = (url) => {\n  try {\n    const u = new URL(url);\n    u.hash = '';\n    const removeParams = [\n      'utm_source','utm_medium','utm_campaign','utm_term','utm_content',\n      'ocid','cmpid','guccounter','gaa_at','gaa_n','gaa_ts','s',\n      'ns_mchannel','ns_campaign','ns_source','ns_linkname','ns_fee',\n      'smid','fbclid','gclid','mc_cid','mc_eid'\n    ];\n    removeParams.forEach(p => u.searchParams.delete(p));\n    let pathname = u.pathname.replace(/\\/$/, '').replace(/\\/amp$/, '').replace(/\\/amp\\//, '/');\n    u.pathname = pathname || '/';\n    return u.toString();\n  } catch (e) {\n    return String(url || '').trim();\n  }\n};\n\nconst titleKey = (title) => String(title || '')\n  .toLowerCase()\n  .replace(/[«»\"'`]/g, '')\n  .replace(/[^\\p{L}\\p{N}\\s]/gu, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim()\n  .slice(0, 180);\n\nfor (let i = 0; i < httpItems.length; i++) {\n  const item = httpItems[i];\n  const xml = item.json?.data || item.json?.body || item.json || '';\n  if (!xml || typeof xml !== 'string') continue;\n\n  const label = feedItems[i]?.json?.label || 'Источник';\n  const entryMatches = xml.matchAll(/<(?:item|entry)\\b[\\s\\S]*?>[\\s\\S]*?<\\/(?:item|entry)>/gi);\n\n  for (const match of entryMatches) {\n    const entryXml = match[0];\n    const title = tagText(entryXml, ['title']);\n    const linkRaw = extractLink(entryXml);\n    const description = tagText(entryXml, ['description', 'summary', 'content', 'content:encoded']);\n    if (!title || !linkRaw) continue;\n\n    const link = normalizeUrl(linkRaw);\n    const dateStr = tagText(entryXml, ['pubDate', 'published', 'updated', 'dc:date']);\n    if (dateStr) {\n      const pubTs = new Date(dateStr).getTime();\n      if (!isNaN(pubTs) && pubTs < cutoffMs) continue;\n    }\n\n    const tKey = titleKey(title);\n    if (seenUrls.has(link) || seenTitleKeys.has(tKey)) continue;\n    seenUrls.add(link);\n    seenTitleKeys.add(tKey);\n\n    const articleObj = {\n      title,\n      link,\n      source: label,\n      description: description || ''\n    };\n\n    if (label === GOOGLE_LABEL) googleBuffer.push(articleObj);\n    else results.push(articleObj);\n  }\n}\n\nfor (let k = googleBuffer.length - 1; k > 0; k--) {\n  const j = Math.floor(Math.random() * (k + 1));\n  [googleBuffer[k], googleBuffer[j]] = [googleBuffer[j], googleBuffer[k]];\n}\ngoogleBuffer.slice(0, GOOGLE_LIMIT).forEach(r => {\n  const tKey = titleKey(r.title);\n  if (!seenTitleKeys.has('google:' + tKey)) {\n    seenTitleKeys.add('google:' + tKey);\n    results.push(r);\n  }\n});\n\nif (results.length === 0) {\n  return [{ json: { isEmpty: true } }];\n}\n\nreturn results.map(r => ({ json: r }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        -560
+      ],
+      "id": "b21a2d00-99a8-42de-b86a-c8ffec5f457c",
+      "name": "Разбивка на новости (Collector)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Агрегируем новые статьи из потока в один массив\nconst items = $input.all();\n\nconst newArticles = items\n  .filter(i => !i.json.isEmpty)\n  .map(i => i.json);\n\nreturn [{ json: { newArticles } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1744,
+        -560
+      ],
+      "id": "4b29bbec-18c9-4a71-823e-4a4bd0b539ba",
+      "name": "Агрегировать новые",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "cachedRaw",
+        "key": "iran:cache:articles",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1968,
+        -560
+      ],
+      "id": "7eb2fa62-5d44-4bba-90ec-6d171433ec39",
+      "name": "Redis: Читать кэш",
+      "credentials": {
+        "redis": {
+          "id": "NPXjpDAAuHYyRxsQ",
+          "name": "Redis account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Мержим новые статьи с существующим кэшем, дедуп по link + title\nconst newArticles = $('Агрегировать новые').first().json.newArticles || [];\n\nlet existing = [];\ntry {\n  const raw = $input.first().json.cachedRaw || '';\n  if (raw) {\n    const parsed = JSON.parse(raw);\n    existing = parsed.articles || [];\n  }\n} catch (e) {}\n\n// --- Нормализация заголовка для дедупа ---\nconst titleKey = (title) => String(title || '')\n  .toLowerCase()\n  .replace(/[«»\"'`''\"\"]/g, '')\n  .replace(/[^\\p{L}\\p{N}\\s]/gu, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim()\n  .slice(0, 180);\n\n// Дедуп: существующие + новые, проверяем И link, И titleKey\nconst seenLinks = new Set(existing.map(a => a.link));\nconst seenTitles = new Set(existing.map(a => titleKey(a.title)));\n\nconst toAdd = newArticles.filter(a => {\n  const tKey = titleKey(a.title);\n  if (seenLinks.has(a.link) || seenTitles.has(tKey)) return false;\n  seenLinks.add(a.link);\n  seenTitles.add(tKey);\n  return true;\n});\n\nconst merged = [...existing, ...toAdd];\n\nif (merged.length === 0) {\n  return [{ json: { skip: true } }];\n}\n\nreturn [{ json: {\n  skip: false,\n  value: JSON.stringify({\n    articles: merged,\n    updatedAt: Date.now(),\n    count: merged.length,\n    addedNow: toAdd.length\n  }),\n  count: merged.length,\n  addedNow: toAdd.length\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2192,
+        -560
+      ],
+      "id": "9c7f1e8d-58b8-488c-9b90-08c8df10c518",
+      "name": "Merge + дедуп"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "skip-check",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2416,
+        -560
+      ],
+      "id": "a84cb270-e1cb-4f0d-b3e7-a78ebaf5ab55",
+      "name": "Есть статьи?"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "iran:cache:articles",
+        "value": "={{ $json.value }}",
+        "expire": true,
+        "ttl": 86400
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2640,
+        -464
+      ],
+      "id": "986c86b8-031a-4ecb-840e-59db2a17f78d",
+      "name": "Redis: Сохранить кэш",
+      "credentials": {
+        "redis": {
+          "id": "NPXjpDAAuHYyRxsQ",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        784,
+        -560
+      ],
+      "id": "19d8ec5f-665f-4439-9d82-0587c677390c",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "cachedRaw",
+        "key": "iran:cache:articles",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        -16
+      ],
+      "id": "72574d1a-71c7-4ea8-af5f-98dd43c7aa2e",
+      "name": "Redis: Читать кэш статей",
+      "credentials": {
+        "redis": {
+          "id": "NPXjpDAAuHYyRxsQ",
+          "name": "Redis account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Распаковываем кэш из Redis в поток items\n// Дедуп по нормализованному заголовку — оставляем одну версию каждой новости\nconst chatId = String($('Нормализация').first().json.message.chat.id);\n\nlet articles = [];\ntry {\n  const raw = $input.first().json.cachedRaw || '';\n  if (raw) {\n    const parsed = JSON.parse(raw);\n    articles = parsed.articles || [];\n  }\n} catch(e) {}\n\nif (articles.length === 0) {\n  return [{ json: { isEmpty: true, redisKey: 'iran1:empty:placeholder' } }];\n}\n\n// --- Дедуп по заголовку: оставляем первую (самую старую) версию ---\nconst titleKey = (title) => String(title || '')\n  .toLowerCase()\n  .replace(/[«»\"'`''\"\"]/g, '')\n  .replace(/[^\\p{L}\\p{N}\\s]/gu, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim()\n  .slice(0, 180);\n\nconst seenTitles = new Set();\nconst unique = [];\n\nfor (const a of articles) {\n  const tKey = titleKey(a.title);\n  if (seenTitles.has(tKey)) continue;\n  seenTitles.add(tKey);\n  unique.push(a);\n}\n\nreturn unique.map(a => ({\n  json: {\n    ...a,\n    chatId,\n    redisKey: 'iran1:' + chatId + ':' + (a.link || '').replace(/[^a-zA-Z0-9]/g, '_').substring(0, 120)\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        -16
+      ],
+      "id": "311d802c-eb00-4a7b-b2d4-6dc1530d0cbc",
+      "name": "Распаковать кэш",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        2544,
+        -16
+      ],
+      "id": "d89fb899-4900-4c0b-9d33-88d996de2dca",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f6f94b1c-2bf4-46bb-be6a-e78930e9a418",
+              "name": "workflow_name",
+              "value": "Иран новости",
+              "type": "string"
+            },
+            {
+              "id": "86d26951-4931-4436-a790-134b2eb7e3e4",
+              "name": "workflow_id",
+              "value": "={{ $workflow.id }}",
+              "type": "string"
+            },
+            {
+              "id": "67b0cf12-d164-4e78-a61f-20ec8bfd6016",
+              "name": "execution_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "bf8b6837-c25a-4a62-8b84-bec44f14fb01",
+              "name": "node_name",
+              "value": "TG: Финальный отчет",
+              "type": "string"
+            },
+            {
+              "id": "4540fe65-4fa7-4022-92a2-41ecae54617d",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "37f71bbd-e7e0-4a7a-b19c-f8265de37f50",
+              "name": "items_count",
+              "value": "=1",
+              "type": "number"
+            },
+            {
+              "id": "60594a9c-cf51-451c-a674-bb3a4621a802",
+              "name": "output_data",
+              "value": "=$('Разбивка TG').first().json.text.substring(0,4000)",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2848,
+        224
+      ],
+      "id": "6ff47c59-f739-4183-bda3-af647a10fcdb",
+      "name": "Set LOG Дайджест"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "SeHd72wURzGUN62n",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/SeHd72wURzGUN62n",
+          "cachedResultName": "LOG Writer"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3056,
+        224
+      ],
+      "id": "b4ba31da-2694-4c94-8b7f-e6a4241cb973",
+      "name": "LOG Дайджест"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5c0e4b91-a0a8-4a93-88c8-7416718664b7",
+              "leftValue": "={{$json.isEmpty}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        992,
+        592
+      ],
+      "id": "942bc2ef-7940-40b5-8838-b8fbf5a275d4",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ca694698-86e6-4120-afa4-41c3f0d15a24",
+              "name": "text ",
+              "value": "Новых новостей нет с прошлого запроса. Может, оно и к лучшему",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1232,
+        448
+      ],
+      "id": "40450821-5d4d-4185-9092-e6a01f6e76d1",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Redis: Проверить статью": {
+      "main": [
+        [
+          {
+            "node": "Фильтр: только новые",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Фильтр: только новые": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis: Запомнить статьи": {
+      "main": [
+        [
+          {
+            "node": "Redis: Читать историю",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Сборка в текст": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Сохранить сюжет": {
+      "main": [
+        [
+          {
+            "node": "Разбивка TG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Нормализация",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis: Читать lastSeen": {
+      "main": [
+        [
+          {
+            "node": "Приветствие",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis: Читать историю": {
+      "main": [
+        [
+          {
+            "node": "Сборка в текст",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Приветствие": {
+      "main": [
+        [
+          {
+            "node": "Redis: Читать кэш статей",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Предфильтр по теме": {
+      "main": [
+        [
+          {
+            "node": "Redis: Запомнить статьи",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Разбивка TG": {
+      "main": [
+        [
+          {
+            "node": "TG: Финальный отчет",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Общий разбор": {
+      "main": [
+        [
+          {
+            "node": "Постфильтр",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Подмена чата": {
+      "main": [
+        [
+          {
+            "node": "Нормализация",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Нормализация": {
+      "main": [
+        [
+          {
+            "node": "Redis: Читать lastSeen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis: Пред. котировки": {
+      "main": [
+        [
+          {
+            "node": "Котировки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Постфильтр": {
+      "main": [
+        [
+          {
+            "node": "Восстановление ссылок",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Котировки": {
+      "main": [
+        [
+          {
+            "node": "Предфильтр по теме",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TG: Финальный отчет": {
+      "main": [
+        [
+          {
+            "node": "Redis: Сохранить котировки",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Redis: Запомнить сюжет",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Redis: Читать счётчик",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Redis: Обновить lastSeen",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Set LOG Дайджест",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Восстановление ссылок": {
+      "main": [
+        [
+          {
+            "node": "Сохранить сюжет",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis: Читать счётчик": {
+      "main": [
+        [
+          {
+            "node": "Проверка счётчика",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Проверка счётчика": {
+      "main": [
+        [
+          {
+            "node": "Redis: Сохранить счётчик",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis: Сохранить счётчик": {
+      "main": [
+        [
+          {
+            "node": "Третий запрос?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Третий запрос?": {
+      "main": [
+        [
+          {
+            "node": "TG: Промо",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ручной запуск": {
+      "main": [
+        [
+          {
+            "node": "Подмена чата",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Общий разбор",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Список лент",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Список лент": {
+      "main": [
+        [
+          {
+            "node": "Запрос RSS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Запрос RSS": {
+      "main": [
+        [
+          {
+            "node": "Разбивка на новости (Collector)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Разбивка на новости (Collector)": {
+      "main": [
+        [
+          {
+            "node": "Агрегировать новые",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Агрегировать новые": {
+      "main": [
+        [
+          {
+            "node": "Redis: Читать кэш",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis: Читать кэш": {
+      "main": [
+        [
+          {
+            "node": "Merge + дедуп",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge + дедуп": {
+      "main": [
+        [
+          {
+            "node": "Есть статьи?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Есть статьи?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Redis: Сохранить кэш",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis: Читать кэш статей": {
+      "main": [
+        [
+          {
+            "node": "Распаковать кэш",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Распаковать кэш": {
+      "main": [
+        [
+          {
+            "node": "Redis: Проверить статью",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Redis: Пред. котировки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set LOG Дайджест": {
+      "main": [
+        [
+          {
+            "node": "LOG Дайджест",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Общий разбор",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "TG: Финальный отчет",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "SeHd72wURzGUN62n",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 600
+  },
+  "versionId": "99e114c0-adcc-4571-8581-dfdbe90c5320",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "efdde4a1bc69b71057bcdf55f6ba95ca3f5f01de8f5cdb71394dc63f3bad5cf9"
+  },
+  "id": "Jon8TFqVHCMgMq9t",
+  "tags": []
+}
