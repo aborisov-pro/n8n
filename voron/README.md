@@ -1,74 +1,114 @@
-# Voron — RSS Feed Health Check
+# 🐦‍⬛ Ворон — Проверка здоровья RSS-лент
 
-n8n workflow · 8 nodes · category: infra
+> Принимает список URL, проверяет каждый фид и возвращает отчёт: что живо, что упало и почему.
 
-## Screenshot
+---
 
-![Voron workflow](screenshot.png)
+## Что делает
 
-## What it does
+Ворон — инструмент мониторинга RSS и Atom лент.
 
-Accepts a list of URLs (from n8n chat or Telegram), fetches each feed,
-parses the XML, checks the freshness of the latest entry.
-Returns a report: healthy feeds and problematic ones with reasons.
+Принимает список URL из чата или Telegram, загружает каждый фид, парсит XML и проверяет свежесть последней записи. Ленты старше 100 дней считаются проблемными. Итог — отчёт с двумя списками: рабочие и проблемные, с кодом причины для каждой.
 
-## Triggers
+---
 
-- **Chat** — paste URLs into the n8n chat widget
-- **Telegram** — send URLs to the bot, get the report back in the same chat
-
-## How it works
-
-1. Extract all URLs from the incoming message
-2. Fetch each feed via HTTP (15 s timeout, browser User-Agent)
-3. Parse RSS/Atom XML — find the most recent `<item>` or `<entry>`
-4. Check publication date — flag feeds older than 100 days
-5. Build a report split into chunks (≤ 3 800 chars each)
-6. Route: Telegram source → send via Telegram bot; Chat source → return to chat
-
-## Output format
+## Структура воркфлоу
 
 ```
-✅ Healthy (N)
-✅ 3d — example.com/feed
-✅ 12d — another.org/rss
+Chat Trigger / Telegram Trigger
+  → Extract URLs from Text
+  → Fetch RSS
+  → Parse & Report
+  → Is Telegram?
+      true  → Send to Telegram
+      false → Return Result
+```
 
-❌ Problematic (N)
-❌ Timeout — slow-site.net/feed
-❌ 210d — stale-blog.com/rss.xml
+### Узлы (8 нод)
+
+| Нода | Тип | Назначение |
+|------|-----|-----------|
+| When chat message received | Chat Trigger | Приём URL из чата n8n |
+| Telegram Trigger | Telegram | Приём URL из Telegram |
+| Extract URLs from Text | Code | Извлечение всех URL из сообщения |
+| Fetch RSS | HTTP Request | Загрузка каждого фида (таймаут 15 с) |
+| Parse & Report | Code | Парсинг XML, проверка даты, формирование отчёта |
+| Is Telegram? | IF | Маршрутизация по источнику запроса |
+| Send to Telegram | Telegram | Отправка отчёта обратно в Telegram |
+| Return Result | Code | Возврат результата в чат n8n |
+
+---
+
+## Стек
+
+| Компонент | Решение |
+|-----------|---------|
+| Платформа | n8n (self-hosted) |
+| Парсинг | JavaScript (Code node), нативный XML |
+| Уведомления | Telegram Bot API |
+| Форматирование | HTML-теги Telegram (`<b>`, `&lt;`, `&gt;`) |
+
+---
+
+## Формат отчёта
+
+```
+✅ Рабочие (N)
+✅ 3д — example.com/feed
+✅ 12д — another.org/rss
+
+❌ Проблемные (N)
+❌ Таймаут — slow-site.net/feed
+❌ 210д — stale-blog.com/rss.xml
 ❌ Cloudflare — blocked-source.com/feed
 ```
 
-## Error reasons
+### Коды ошибок
 
-| Code | Meaning |
-|------|---------|
-| `Timeout` | No response in 15 s |
-| `Cloudflare` | Access blocked |
-| `Empty` | Response under 50 chars |
-| `No entries` | No `<item>` / `<entry>` found |
-| `Date` | Date field missing or unparseable |
-| `Nd` | Feed is N days stale (> 100 d) |
-| `5xx / 4xx` | HTTP error code |
+| Код | Значение |
+|-----|---------|
+| `Таймаут` | Нет ответа за 15 секунд |
+| `Cloudflare` | Доступ заблокирован |
+| `Пусто` | Ответ короче 50 символов |
+| `Нет записей` | Не найден `<item>` / `<entry>` |
+| `Дата` | Поле даты отсутствует или не парсится |
+| `Nд` | Лента не обновлялась N дней (> 100) |
+| `4xx / 5xx` | HTTP-ошибка |
 
-## Requirements
+---
 
-- n8n with HTTP Request and Code nodes
-- Telegram bot token (for Telegram trigger + send)
-  — credential name: **RSS check**
+## Необходимые credentials
 
-## Files
+| Credential | Назначение | Нода |
+|------------|-----------|------|
+| Telegram Bot API | Приём сообщений и отправка отчёта | Telegram Trigger, Send to Telegram |
+
+> В JSON credential-имя задано как **RSS check** — переименуй или создай с таким же именем.
+
+---
+
+## Файлы
 
 ```
 voron/
-├── README.md                          ← this file
-├── screenshot.png                     ← workflow screenshot
-└── Voron__RSS-Feed-Health-Check.json  ← workflow export
+├── README.md                          ← этот файл
+├── screenshot.png                     ← схема воркфлоу
+└── Voron__RSS-Feed-Health-Check.json  ← воркфлоу для импорта в n8n
 ```
 
-## Import
+---
 
-1. In n8n → **Workflows → Import from file**
-2. Select `Voron__RSS-Feed-Health-Check.json`
-3. Set up the **RSS check** Telegram credential
-4. Activate
+## Порядок установки
+
+1. Импортировать: **Settings → Import workflow → `Voron__RSS-Feed-Health-Check.json`**
+2. Настроить credential **Telegram Bot API** (название: RSS check)
+3. Активировать воркфлоу
+
+---
+
+## Автор
+
+**Алексей Борисов** — предприниматель, преподаватель.
+
+- 🌐 [aborisov.pro/automation](https://aborisov.pro/automation)
+- 💬 [t.me/borisov_alexey_v](https://t.me/borisov_alexey_v)
