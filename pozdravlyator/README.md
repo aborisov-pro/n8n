@@ -105,7 +105,13 @@ pozdravlyator/
 
 ## Автор
 
-**Алексей Борисов** — предприниматель, преподаватель.
+**Алексей Борисов** — предприниматель, преподаватель, разработчик.
 
-- 🌐 [aborisov.pro/automation](https://aborisov.pro/automation)
-- 💬 [t.me/borisov_alexey_v](https://t.me/borisov_alexey_v)
+233 сессии (4 757+ ак. часов) для 59 организаций: Госдума, ЦБ, Минфин, Минэк, ЛУКОЙЛ, Сколково, Финуниверситет, ВАВТ.
+81 авторская программа: Excel, ИИ и нейросети, Power BI, n8n, Р7-Офис.
+MOS Expert (Excel 2019 — 1 000/1 000).
+
+🌐 [aborisov.pro/automation](https://aborisov.pro/automation)
+🎓 [borisov.academy](https://borisov.academy)
+💬 [t.me/borisov_alexey_v](https://t.me/borisov_alexey_v)
+
