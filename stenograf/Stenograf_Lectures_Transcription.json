@@ -1,0 +1,464 @@
+{
+  "name": "Стенограф — Расшифровка лекций",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a2bdf6d1-0ac2-48b4-8f88-f2f27cf66630",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [2432, 64]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "a1", "name": "bucket_name", "value": "YOUR_S3_BUCKET", "type": "string" },
+            { "id": "a2", "name": "disk_folder", "value": "/YOUR_DISK_FOLDER/merged", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "224163bf-c32a-473c-b435-8b5109c43479",
+      "name": "Set: Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2656, 64]
+    },
+    {
+      "parameters": {
+        "url": "https://cloud-api.yandex.net/v1/disk/resources",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "path", "value": "={{ $('Set: Config').item.json.disk_folder }}" },
+            { "name": "media_type", "value": "audio" },
+            { "name": "limit", "value": "100" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9598f72c-4ec6-4b7e-a1f0-003d8838a791",
+      "name": "List Disk Files",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [2880, 64]
+    },
+    {
+      "parameters": {
+        "url": "https://YOUR_SUPABASE_URL.supabase.co/rest/v1/lectures_transcripts",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "select", "value": "disk_path,status" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f73e01ce-bd99-40af-868b-11b4881bf975",
+      "name": "Get Existing Paths",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [3104, 64],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const diskItems = $('List Disk Files').first().json._embedded?.items || [];\nconst existingArr = $input.all().map(i => i.json);\nconst skipSet = new Set(\n  existingArr\n    .filter(r => r && (r.status === 'done' || r.status === 'processing' || r.status === 'merged'))\n    .map(r => r.disk_path)\n);\nconst bucket = $('Set: Config').first().json.bucket_name;\n\nreturn diskItems\n  .filter(f => f.type === 'file' && !skipSet.has(f.path))\n  .map(f => {\n    const m = f.name.match(/^(.+)_part(\\d+)\\.mp3$/);\n    const lecture_base = m ? m[1] : f.name.replace(/\\.mp3$/, '');\n    const part_index = m ? parseInt(m[2], 10) : 1;\n    return {\n      json: {\n        disk_path: f.path,\n        file_name: f.name,\n        mime_type: f.mime_type || 'audio/mpeg',\n        bucket_name: bucket,\n        s3_key: 'lectures/' + f.name,\n        lecture_base,\n        part_index\n      }\n    };\n  });"
+      },
+      "id": "c77de3c4-d3b6-4a8a-ad5a-2a5a7083318d",
+      "name": "Filter New Files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3328, 64]
+    },
+    {
+      "parameters": {
+        "method": "HEAD",
+        "url": "=https://storage.yandexcloud.net/{{ $('Set: Config').item.json.bucket_name }}/{{ $json.s3_key }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "ad9e5df9-e797-40ba-a4c2-ca896b917130",
+      "name": "Check S3 Exists",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [3488, 64]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "s3exists",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": 200,
+              "operator": { "type": "number", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ae8a5fab-93ca-4b0a-8624-848ce768152a",
+      "name": "IF S3 Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [3648, 64]
+    },
+    {
+      "parameters": {
+        "url": "https://cloud-api.yandex.net/v1/disk/resources/download",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "path", "value": "={{ $('Filter New Files').item.json.disk_path }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "190ab9fc-b47a-47bc-91b8-c27a28392001",
+      "name": "Get Download URL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [3808, 176]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.href }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "b695622c-fb08-4ff4-9b76-243eea3a5abd",
+      "name": "Download File",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [3968, 176]
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "={{ $('Set: Config').item.json.bucket_name }}",
+        "fileName": "={{ $('Filter New Files').item.json.file_name }}",
+        "additionalFields": {
+          "acl": "publicRead",
+          "parentFolderKey": "lectures"
+        }
+      },
+      "id": "aec0f6fc-9fbd-4f80-9ede-d767fda1c5f8",
+      "name": "Upload to S3",
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [4128, 176]
+    },
+    {
+      "parameters": {},
+      "id": "9cbd0b96-2d65-4882-b47e-c3c2f9a0d3c6",
+      "name": "Merge Branches",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [4288, 64]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://transcribe.api.cloud.yandex.net/speech/stt/v2/longRunningRecognize",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"config\": {\n    \"specification\": {\n      \"languageCode\": \"ru-RU\",\n      \"model\": \"deferred-general\",\n      \"audioEncoding\": \"MP3\",\n      \"profanityFilter\": false\n    }\n  },\n  \"audio\": {\n    \"uri\": \"https://storage.yandexcloud.net/{{ $('Set: Config').item.json.bucket_name }}/{{ $('Filter New Files').item.json.s3_key }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "40754265-703e-452b-86ff-5e17217f2cd5",
+      "name": "Submit to SpeechKit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [4448, 64]
+    },
+    {
+      "parameters": {
+        "tableId": "lectures_transcripts",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "disk_path", "fieldValue": "={{ $('Filter New Files').item.json.disk_path }}" },
+            { "fieldId": "file_name", "fieldValue": "={{ $('Filter New Files').item.json.file_name }}" },
+            { "fieldId": "s3_key", "fieldValue": "={{ $('Filter New Files').item.json.s3_key }}" },
+            { "fieldId": "operation_id", "fieldValue": "={{ $json.id }}" },
+            { "fieldId": "status", "fieldValue": "processing" },
+            { "fieldId": "lecture_base", "fieldValue": "={{ $('Filter New Files').item.json.lecture_base }}" },
+            { "fieldId": "part_index", "fieldValue": "={{ $('Filter New Files').item.json.part_index }}" }
+          ]
+        }
+      },
+      "id": "a7aa6556-d294-4fe1-8f93-92bd8f13437b",
+      "name": "Save to Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [4608, 64]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "minutes", "minutesInterval": 50 }
+          ]
+        }
+      },
+      "id": "d9fca57a-f940-4cc6-b7be-5f5fa46844ca",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [2432, 576]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "b1", "name": "bucket_name", "value": "YOUR_S3_BUCKET", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c1e2f3a4-5678-4901-8abc-def012345678",
+      "name": "Set: Config (Schedule)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2600, 576]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "lectures_transcripts",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            { "keyName": "status", "condition": "eq", "keyValue": "processing" }
+          ]
+        }
+      },
+      "id": "0ec08375-06d3-4058-8e81-2cb1f36c624d",
+      "name": "Get Processing Records",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [2800, 576]
+    },
+    {
+      "parameters": {
+        "url": "=https://operation.api.cloud.yandex.net/operations/{{ $json.operation_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "a1d41441-4651-4a1c-9a60-fb05106c4274",
+      "name": "Check Operation Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [3000, 576]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.done }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and",
+          "options": {}
+        },
+        "options": {}
+      },
+      "id": "4d2bb25b-19cd-44dc-ab5f-97822d08c35b",
+      "name": "Is Done?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [3200, 576]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e1",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": { "type": "object", "operation": "notEmpty", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d2c2ec4f-7eec-4fe2-9ad1-d625e503d283",
+      "name": "Has Error?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [3400, 576]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const chunks = $json.response && $json.response.chunks ? $json.response.chunks : [];\nconst text = chunks\n  .map(c => c.alternatives && c.alternatives[0] ? c.alternatives[0].text : '')\n  .filter(t => t)\n  .join('\\n');\nconst dbRecord = $('Get Processing Records').item.json;\nreturn { json: { transcript: text, record_id: dbRecord.id, s3_key: dbRecord.s3_key } };"
+      },
+      "id": "faa675b4-a76d-4319-91df-9f0d7c0cf2fa",
+      "name": "Extract Transcript",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3600, 672]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "lectures_transcripts",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            { "keyName": "id", "condition": "eq", "keyValue": "={{ $json.record_id }}" }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "status", "fieldValue": "done" },
+            { "fieldId": "transcript", "fieldValue": "={{ $json.transcript }}" }
+          ]
+        }
+      },
+      "id": "f9591673-5ebf-48f8-85c9-229914375755",
+      "name": "Update Done",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [3800, 672]
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "bucketName": "={{ $('Set: Config (Schedule)').item.json.bucket_name }}",
+        "fileKey": "={{ $('Extract Transcript').item.json.s3_key }}",
+        "options": {}
+      },
+      "id": "caca60a8-574a-46b4-aa63-726400752814",
+      "name": "Delete from S3",
+      "type": "n8n-nodes-base.s3",
+      "typeVersion": 1,
+      "position": [4000, 672]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "lectures_transcripts",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            { "keyName": "operation_id", "condition": "eq", "keyValue": "={{ $('Check Operation Status').item.json.id }}" }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "status", "fieldValue": "error" },
+            { "fieldId": "error_msg", "fieldValue": "={{ JSON.stringify($json.error) }}" }
+          ]
+        }
+      },
+      "id": "928bdd25-7a7a-4631-96bb-7cf8d908af06",
+      "name": "Update Error",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [3600, 480]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR_SUPABASE_URL.supabase.co/rest/v1/rpc/try_merge_lecture",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n \"p_base\": \"{{ $('Get Processing Records').item.json.lecture_base }}\"\n}",
+        "options": {}
+      },
+      "name": "Try Merge",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [4200, 672],
+      "id": "9517930e-cad2-464c-b237-eb6c7741f5a6"
+    }
+  ],
+  "connections": {
+    "Manual Trigger": { "main": [[{ "node": "Set: Config", "type": "main", "index": 0 }]] },
+    "Set: Config": { "main": [[{ "node": "List Disk Files", "type": "main", "index": 0 }]] },
+    "List Disk Files": { "main": [[{ "node": "Get Existing Paths", "type": "main", "index": 0 }]] },
+    "Get Existing Paths": { "main": [[{ "node": "Filter New Files", "type": "main", "index": 0 }]] },
+    "Filter New Files": { "main": [[{ "node": "Check S3 Exists", "type": "main", "index": 0 }]] },
+    "Check S3 Exists": { "main": [[{ "node": "IF S3 Exists", "type": "main", "index": 0 }]] },
+    "IF S3 Exists": {
+      "main": [
+        [{ "node": "Merge Branches", "type": "main", "index": 0 }],
+        [{ "node": "Get Download URL", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get Download URL": { "main": [[{ "node": "Download File", "type": "main", "index": 0 }]] },
+    "Download File": { "main": [[{ "node": "Upload to S3", "type": "main", "index": 0 }]] },
+    "Upload to S3": { "main": [[{ "node": "Merge Branches", "type": "main", "index": 1 }]] },
+    "Merge Branches": { "main": [[{ "node": "Submit to SpeechKit", "type": "main", "index": 0 }]] },
+    "Submit to SpeechKit": { "main": [[{ "node": "Save to Supabase", "type": "main", "index": 0 }]] },
+    "Schedule Trigger": { "main": [[{ "node": "Set: Config (Schedule)", "type": "main", "index": 0 }]] },
+    "Set: Config (Schedule)": { "main": [[{ "node": "Get Processing Records", "type": "main", "index": 0 }]] },
+    "Get Processing Records": { "main": [[{ "node": "Check Operation Status", "type": "main", "index": 0 }]] },
+    "Check Operation Status": { "main": [[{ "node": "Is Done?", "type": "main", "index": 0 }]] },
+    "Is Done?": { "main": [[{ "node": "Has Error?", "type": "main", "index": 0 }]] },
+    "Has Error?": {
+      "main": [
+        [{ "node": "Update Error", "type": "main", "index": 0 }],
+        [{ "node": "Extract Transcript", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extract Transcript": { "main": [[{ "node": "Update Done", "type": "main", "index": 0 }]] },
+    "Update Done": { "main": [[{ "node": "Delete from S3", "type": "main", "index": 0 }]] },
+    "Delete from S3": { "main": [[{ "node": "Try Merge", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "active": false,
+  "pinData": {},
+  "tags": [],
+  "meta": {
+    "description": "Цепочка 1 (Manual): Яндекс Диск → S3 → СпичКит → Supabase. Цепочка 2 (Schedule, 50 мин): polling операций → транскрипт в Supabase → чистка S3 → склейка частей через RPC."
+  }
+}
