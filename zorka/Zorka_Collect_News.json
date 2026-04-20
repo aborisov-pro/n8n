@@ -11,7 +11,6 @@
           ]
         }
       },
-      "id": "a49356ab-8cfb-453f-b0f7-b8aa31105a38",
       "name": "Schedule 7:00",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
@@ -27,7 +26,6 @@
         ],
         "additionalFields": {}
       },
-      "id": "a5d6c0a6-2cea-4b7b-8823-94b14e43dc46",
       "name": "Telegram Trigger",
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.2,
@@ -35,10 +33,8 @@
         3392,
         1972
       ],
-      "webhookId": "060d3150-85ba-42d1-a69b-3954367ab4a1",
       "credentials": {
         "telegramApi": {
-          "id": "oNDFx0Ji5smHsZ9f",
           "name": "Zorka Bot"
         }
       }
@@ -67,7 +63,6 @@
         },
         "options": {}
       },
-      "id": "8b0d4a08-5662-4eea-857b-fded23cc7ad6",
       "name": "Кнопка?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -224,7 +219,6 @@
           "ignoreCase": true
         }
       },
-      "id": "7cf55af8-2709-4c0a-a223-3cb45afcf30c",
       "name": "Роутер",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
@@ -288,7 +282,6 @@
           "parse_mode": "HTML"
         }
       },
-      "id": "c1315cb8-13da-4e8a-9876-198648eb740b",
       "name": "Меню",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -296,10 +289,8 @@
         3840,
         2684
       ],
-      "webhookId": "75e0a0d4-71aa-43bf-b8fb-11e56cb74d46",
       "credentials": {
         "telegramApi": {
-          "id": "oNDFx0Ji5smHsZ9f",
           "name": "Zorka Bot"
         }
       }
@@ -346,7 +337,6 @@
         },
         "options": {}
       },
-      "id": "9daed2bc-6cbb-45c3-b6e3-9995e03dc65c",
       "name": "OpenMeteo",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
@@ -360,7 +350,6 @@
         "cityName": "moscow",
         "language": "ru"
       },
-      "id": "eaceaa96-a6aa-4859-8e42-4ab759852d05",
       "name": "OWM",
       "type": "n8n-nodes-base.openWeatherMap",
       "typeVersion": 1,
@@ -370,7 +359,6 @@
       ],
       "credentials": {
         "openWeatherMapApi": {
-          "id": "aYOuE7P0cNBJcbcc",
           "name": "OpenWeatherMap account"
         }
       }
@@ -381,7 +369,6 @@
         "combineBy": "combineByPosition",
         "options": {}
       },
-      "id": "79447067-facb-4ab0-8ea1-0e908974f1f4",
       "name": "Merge Weather",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
@@ -403,7 +390,6 @@
         },
         "batching": {}
       },
-      "id": "f1c64f57-6a4e-46db-a5eb-3df3d1e9c5fa",
       "name": "AI Погода",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
@@ -422,11 +408,9 @@
         4584,
         2264
       ],
-      "id": "202009ba-dc9a-43e6-a657-fa5206c3daad",
       "name": "DeepSeek Chat Model",
       "credentials": {
         "deepSeekApi": {
-          "id": "U5Ot5VwkUjrNjhbV",
           "name": "Borisov DS"
         }
       }
@@ -486,7 +470,6 @@
           "parse_mode": "HTML"
         }
       },
-      "id": "d220ae6b-f43b-4609-8cad-922dac8ec38b",
       "name": "TG Погода",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -494,10 +477,8 @@
         4928,
         2144
       ],
-      "webhookId": "0698f59c-762e-4650-b6b6-4b7b25b972e5",
       "credentials": {
         "telegramApi": {
-          "id": "oNDFx0Ji5smHsZ9f",
           "name": "Zorka Bot"
         }
       }
@@ -540,7 +521,6 @@
         },
         "options": {}
       },
-      "id": "20335ebd-99c7-49c7-94c5-163054bda771",
       "name": "Set LOG Погода",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -560,7 +540,6 @@
           "waitForSubWorkflow": false
         }
       },
-      "id": "000d418f-ab2b-4806-908c-a1d60bf26d7b",
       "name": "LOG Погода",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.1,
@@ -573,7 +552,6 @@
       "parameters": {
         "jsCode": "const feeds = [\n  { country: 'Россия', source: 'ТАСС',              url: 'http://tass.com/rss/v2.xml' },\n  { country: 'Россия', source: 'Коммерсантъ',       url: 'https://www.kommersant.ru/RSS/main.xml' },\n  { country: 'Британия', source: 'BBC News',         url: 'https://feeds.bbci.co.uk/news/world/rss.xml' },\n  { country: 'Франция', source: 'Le Monde',          url: 'https://www.lemonde.fr/en/rss/une.xml' },\n  { country: 'Германия', source: 'Der Spiegel',      url: 'https://www.spiegel.de/schlagzeilen/tops/index.rss' },\n  { country: 'Индия',  source: 'Times of India',     url: 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms' },\n  { country: 'ЮАР',    source: 'News24',             url: 'https://feeds.news24.com/articles/news24/TopStories/rss' }\n];\nreturn feeds.map(f => ({ json: f }));"
       },
-      "id": "0ed4b946-62bc-4eec-9721-5c01578fdb24",
       "name": "RSS Feeds List",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -603,7 +581,6 @@
           "timeout": 10000
         }
       },
-      "id": "994ba972-b432-4f72-a3b8-26addc780922",
       "name": "Fetch RSS",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -617,7 +594,6 @@
       "parameters": {
         "jsCode": "const items = $input.all();\nconst results = [];\nconst cutoff = new Date(Date.now() - 12 * 60 * 60 * 1000);\n\nconst feedMeta = $('RSS Feeds List').all();\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const country = feedMeta[i]?.json.country || '?';\n  const source  = feedMeta[i]?.json.source  || '?';\n  const xml = item.json.data || '';\n\n  const itemBlocks = [...xml.matchAll(/<item[^>]*>([\\s\\S]*?)<\\/item>/gi)];\n\n  for (const block of itemBlocks) {\n    const content = block[1];\n\n    const titleMatch = content.match(/<title>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/title>/);\n    const linkMatch  = content.match(/<link>([\\s\\S]*?)<\\/link>/) ||\n                       content.match(/<link[^>]+href=[\"']([^\"']+)[\"']/);\n    const dateMatch  = content.match(/<pubDate>([\\s\\S]*?)<\\/pubDate>/) ||\n                       content.match(/<published>([\\s\\S]*?)<\\/published>/) ||\n                       content.match(/<updated>([\\s\\S]*?)<\\/updated>/);\n    const descMatch  = content.match(/<description>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/description>/);\n\n    if (!titleMatch) continue;\n\n    const title = titleMatch[1].trim()\n      .replace(/&#\\d+;/g, '').replace(/&[a-z]+;/gi, '')\n      .replace(/\\uFFFD/g, '').replace(/[\\u200B-\\u200D\\uFEFF]/g, '');\n    const link    = linkMatch  ? linkMatch[1].trim()              : '';\n    const dateStr = dateMatch  ? dateMatch[1].trim()              : '';\n    const desc    = descMatch  ? descMatch[1].trim().substring(0, 200) : '';\n\n    if (dateStr) {\n      const pubDate = new Date(dateStr);\n      if (!isNaN(pubDate) && pubDate < cutoff) continue;\n    }\n\n    results.push({ title, link: link.split('?')[0], country, source, desc });\n  }\n}\n\nconst forLLM = results.map((r, idx) =>\n  `[${idx + 1}] [${r.country} \\u2022 ${r.source}] ${r.title}`\n).join('\\n');\n\nconst mapping = results.map((r, idx) => ({\n  id: idx + 1,\n  title: r.title,\n  link: r.link,\n  country: r.country,\n  source: r.source\n}));\n\nreturn [{ json: { forLLM, mapping, total: results.length } }];"
       },
-      "id": "d9fdf1c8-04b4-4993-9408-dfc940c8d742",
       "name": "Parse RSS",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -639,7 +615,6 @@
         },
         "batching": {}
       },
-      "id": "1a72a97c-e0a7-4479-bddb-cdf2002377d8",
       "name": "Новости России",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
@@ -658,11 +633,9 @@
         4936,
         2604
       ],
-      "id": "0288a3a9-571f-4bfc-ad5b-b7c796b38542",
       "name": "DeepSeek Chat Model1",
       "credentials": {
         "deepSeekApi": {
-          "id": "U5Ot5VwkUjrNjhbV",
           "name": "Borisov DS"
         }
       }
@@ -671,7 +644,6 @@
       "parameters": {
         "jsCode": "const output = ($input.first().json.text || '').trim();\nconst mapping = $('Parse RSS').first().json.mapping || [];\nlet newsText = '\\u2705 Всё нормально';\nif (output !== 'NONE' && output.match(/^\\d+$/)) {\n  const num = parseInt(output, 10);\n  const item = mapping.find(m => m.id === num);\n  if (item) {\n    const linkPart = item.link ? `\\n<a href=\"${item.link}\">Источник: ${item.source} (${item.country})</a>` : `\\nИсточник: ${item.source} (${item.country})`;\n    newsText = `\\ud83d\\udd34 <b>Главное за ночь</b>\\n\\n${item.title}${linkPart}`;\n  }\n}\nreturn [{ json: { newsText } }];"
       },
-      "id": "93a6ca3f-6329-4d35-b439-7ebb53aa4889",
       "name": "Extract News",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -735,7 +707,6 @@
           "parse_mode": "HTML"
         }
       },
-      "id": "c1f7c4e7-c80e-40a8-8b67-4b06ff2e15c3",
       "name": "TG Новости",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -743,10 +714,8 @@
         5440,
         2484
       ],
-      "webhookId": "b476f8fc-b49b-4566-979d-d76fc116b4f0",
       "credentials": {
         "telegramApi": {
-          "id": "oNDFx0Ji5smHsZ9f",
           "name": "Zorka Bot"
         }
       }
@@ -789,7 +758,6 @@
         },
         "options": {}
       },
-      "id": "f9a23571-43d8-4da6-a270-66583c9caeaa",
       "name": "Set LOG Новости",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -809,7 +777,6 @@
           "waitForSubWorkflow": false
         }
       },
-      "id": "5725f79c-e1c3-4e58-992c-b482db8b9f58",
       "name": "LOG Новости",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.1,
@@ -860,7 +827,6 @@
         },
         "options": {}
       },
-      "id": "e2086187-afdc-428d-956d-343cda165d33",
       "name": "YouTube Search",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -875,7 +841,6 @@
         "key": "morning:seen_videos",
         "options": {}
       },
-      "id": "ad8770ba-bc3a-4365-8d0e-cbe22862af62",
       "name": "Redis GET seen",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
@@ -885,7 +850,6 @@
       ],
       "credentials": {
         "redis": {
-          "id": "NPXjpDAAuHYyRxsQ",
           "name": "Redis account"
         }
       }
@@ -894,7 +858,6 @@
       "parameters": {
         "jsCode": "const redisRaw = $input.first().json.value || '[]';\nlet seenIds = [];\ntry { seenIds = JSON.parse(redisRaw); } catch(e) { seenIds = []; }\nif (!Array.isArray(seenIds)) seenIds = [];\n\nconst ytItems = $('YouTube Search').first().json.items || [];\n\nconst unseen = ytItems.filter(v => !seenIds.includes(v.id?.videoId));\nconst pool = unseen.length > 0 ? unseen : ytItems;\n\nconst randomIndex = Math.floor(Math.random() * pool.length);\nconst video = pool[randomIndex];\nconst videoId = video?.id?.videoId;\nconst title = video?.snippet?.title || '';\n\nlet videoText = '';\nif (videoId) {\n  videoText = `\\ud83c\\udfac <b>Видео для практики (Волейбол):</b>\\n<a href=\"https://www.youtube.com/watch?v=${videoId}\">${title}</a>`;\n}\n\nconst updatedSeen = [...new Set([...seenIds, videoId])].slice(-30);\n\nreturn [{ json: { videoText, updatedSeen: JSON.stringify(updatedSeen) } }];"
       },
-      "id": "70d24287-4dbf-4064-9e90-d534663f1b0a",
       "name": "Pick Video",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -911,7 +874,6 @@
         "expire": true,
         "ttl": 2592000
       },
-      "id": "8a6b3f01-b1f4-4f41-8bd6-9743a585df3c",
       "name": "Redis SET seen",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
@@ -921,7 +883,6 @@
       ],
       "credentials": {
         "redis": {
-          "id": "NPXjpDAAuHYyRxsQ",
           "name": "Redis account"
         }
       }
@@ -932,7 +893,6 @@
         "key": "morning:last_sport",
         "options": {}
       },
-      "id": "0422bf02-394a-4c1c-8d7c-7a6c75420991",
       "name": "Redis GET спорт",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
@@ -942,7 +902,6 @@
       ],
       "credentials": {
         "redis": {
-          "id": "NPXjpDAAuHYyRxsQ",
           "name": "Redis account"
         }
       }
@@ -951,7 +910,6 @@
       "parameters": {
         "jsCode": "const redisRaw = $input.first().json.value || '[]';\nlet history = [];\ntry { history = JSON.parse(redisRaw); } catch(e) {}\nif (!Array.isArray(history)) {\n  // Миграция со старого формата (одиночный объект)\n  if (typeof history === 'object' && history.volleyball) {\n    history = [history];\n  } else {\n    history = [];\n  }\n}\n\nconst avoidVolleyball = history.map(h => h.volleyball).filter(Boolean).join(' | ');\nconst avoidSwimming = history.map(h => h.swimming).filter(Boolean).join(' | ');\n\nreturn [{ json: { avoidVolleyball, avoidSwimming, history: JSON.stringify(history) } }];"
       },
-      "id": "7cc531dd-655e-4524-bd36-774633024851",
       "name": "Parse Last Sport",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -966,7 +924,6 @@
         "text": "=Сгенерируй два элемента. КРИТИЧЕСКИ ВАЖНО: не повторяй ничего из истории.\n\nИстория советов по волейболу за последнюю неделю (НЕ ПОВТОРЯТЬ ни одну из этих тем):\n{{ $json.avoidVolleyball || 'нет истории' }}\n\nИстория советов по плаванию за последнюю неделю (НЕ ПОВТОРЯТЬ ни одну из этих тем):\n{{ $json.avoidSwimming || 'нет истории' }}\n\nОБЯЗАТЕЛЬНО выбери НОВУЮ тему из списка:\n\nВолейбол (выбери одну, которой НЕТ в истории): подача силовая, подача планер, приём снизу, приём сверху, блокирование одиночное, блокирование групповое, атака с первого темпа, атака со второго темпа, пайп-атака, работа связующего, перемещение в защите, страховка блока, подкат, командная коммуникация, разминка перед игрой, позиция 1, позиция 4, позиция 6, игра на сетке\n\nПлавание (выбери одну, которой НЕТ в истории): кроль техника гребка, кроль вход руки в воду, кроль ротация корпуса, кроль дыхание в сторону, брасс толчок ногами, брасс синхронизация рук и ног, баттерфляй удар дельфином, спина положение тела, старт с тумбы, открытый поворот, поворот сальто, финиш касание стенки, дыхание на длинные дистанции, интервальные тренировки, разминка в воде, работа ног с доской, темп и ритм гребков\n\nОтвет — ТОЛЬКО валидный JSON:\n{\n  \"volleyball\": \"текст совета до 200 символов\",\n  \"swimming\": \"текст совета до 200 символов\"\n}\nБез markdown, без блоков кода, просто сырой JSON.",
         "batching": {}
       },
-      "id": "249bd81c-b497-4180-a5d0-e7b78645a12a",
       "name": "AI Спорт",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
@@ -985,11 +942,9 @@
         5736,
         2900
       ],
-      "id": "f513a878-d432-46dc-9ee1-f033e5ab7d61",
       "name": "🧠 DeepSeek Спорт",
       "credentials": {
         "deepSeekApi": {
-          "id": "U5Ot5VwkUjrNjhbV",
           "name": "Borisov DS"
         }
       }
@@ -998,7 +953,6 @@
       "parameters": {
         "jsCode": "const aiOutput = $input.first().json.text || '{}';\nlet aiData = { volleyball: 'Совет недоступен', swimming: 'Совет недоступен' };\ntry {\n  const cleanStr = aiOutput.replace(/```json/g, '').replace(/```/g, '').trim();\n  aiData = JSON.parse(cleanStr);\n} catch(e) {}\n\nconst videoText = $('Pick Video').first().json.videoText || '';\n\nconst message = `\\ud83c\\udfd0 <b>Совет волейболисту:</b>\\n${aiData.volleyball}\\n\\n\\ud83c\\udfca\\u200d\\u2642\\ufe0f <b>Совет пловцу:</b>\\n${aiData.swimming}\\n\\n${videoText}`;\n\n// Историю читаем из поля, которое Parse Last Sport уже передал по цепочке\nlet history = [];\ntry {\n  const prev = $('Parse Last Sport').first().json.history;\n  if (prev) history = JSON.parse(prev);\n} catch(e) {}\nif (!Array.isArray(history)) history = [];\nhistory.push({ volleyball: aiData.volleyball, swimming: aiData.swimming });\nif (history.length > 7) history = history.slice(-7);\n\nreturn [{ json: { message, aiData: JSON.stringify(history) } }];"
       },
-      "id": "acbc4763-0d78-4386-9766-fd197af2299e",
       "name": "Format Sport",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1015,7 +969,6 @@
         "expire": true,
         "ttl": 604800
       },
-      "id": "3bd34f30-f02f-486f-83d6-7d43a63ad18e",
       "name": "Redis SET спорт",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
@@ -1025,7 +978,6 @@
       ],
       "credentials": {
         "redis": {
-          "id": "NPXjpDAAuHYyRxsQ",
           "name": "Redis account"
         }
       }
@@ -1085,7 +1037,6 @@
           "parse_mode": "HTML"
         }
       },
-      "id": "51282b86-6863-443c-ae55-e20987200a7f",
       "name": "TG Спорт",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -1093,10 +1044,8 @@
         6528,
         2780
       ],
-      "webhookId": "d1622cc3-f693-4de0-b87f-139b80151126",
       "credentials": {
         "telegramApi": {
-          "id": "oNDFx0Ji5smHsZ9f",
           "name": "Zorka Bot"
         }
       }
@@ -1139,7 +1088,6 @@
         },
         "options": {}
       },
-      "id": "44c1fc3f-5c46-4145-a203-d835b5203109",
       "name": "Set LOG Спорт",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -1159,7 +1107,6 @@
           "waitForSubWorkflow": false
         }
       },
-      "id": "1f941fa3-ed03-4c0c-9190-9681fdb89276",
       "name": "LOG Спорт",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.1,
@@ -1175,7 +1122,6 @@
           "q": "newer_than:1d -in:sent"
         }
       },
-      "id": "29dc59de-094c-4f3f-8fa7-14be3332e837",
       "name": "Gmail",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
@@ -1183,10 +1129,8 @@
         4064,
         3076
       ],
-      "webhookId": "c6440793-ab85-460e-adbc-d5e29ec94a4b",
       "credentials": {
         "gmailOAuth2": {
-          "id": "2rRaCkWimSXY8QR8",
           "name": "Gmail_borsug@gmail.com"
         }
       }
@@ -1195,7 +1139,6 @@
       "parameters": {
         "jsCode": "const emails = [];\nfor (const item of $input.all()) {\n    let sender = item.json.From || item.json.from || 'Неизвестно';\n\n    const unsubRaw = item.json['List-Unsubscribe'] || item.json['list-unsubscribe'] || '';\n    let unsub = 'Нет ссылки';\n    if (unsubRaw) {\n        const match = unsubRaw.match(/<([^>]+)>/);\n        unsub = match ? match[1] : unsubRaw;\n    }\n\n    if (sender === 'Неизвестно') {\n        const headers = (item.json.payload && item.json.payload.headers) || [];\n        const fromH = headers.find(h => h.name && h.name.toLowerCase() === 'from');\n        if (fromH) sender = fromH.value;\n\n        if (unsub === 'Нет ссылки') {\n            const unsubH = headers.find(h => h.name && h.name.toLowerCase() === 'list-unsubscribe');\n            if (unsubH) {\n                const m = unsubH.value.match(/<([^>]+)>/);\n                unsub = m ? m[1] : unsubH.value;\n            }\n        }\n    }\n\n    emails.push({\n        sender: sender,\n        unsubscribe: unsub,\n        content: item.json.snippet || item.json.textPlain || 'Нет текста'\n    });\n}\n\nif (emails.length === 0) {\n    return [{ json: { emailData: '[]' } }];\n}\n\nreturn [{ json: { emailData: JSON.stringify(emails) } }];"
       },
-      "id": "8495cccd-2a4e-4693-b7ca-1c72eec88f7c",
       "name": "Extract Emails",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1217,7 +1160,6 @@
         },
         "batching": {}
       },
-      "id": "464bc1dc-6d57-4ab9-b018-ce307dc3d248",
       "name": "AI Gmail",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
@@ -1236,11 +1178,9 @@
         4584,
         3196
       ],
-      "id": "03ff3881-deb2-4508-83ca-6c7980845f73",
       "name": "DeepSeek Chat Model3",
       "credentials": {
         "deepSeekApi": {
-          "id": "U5Ot5VwkUjrNjhbV",
           "name": "Borisov DS"
         }
       }
@@ -1249,7 +1189,6 @@
       "parameters": {
         "jsCode": "const aiOutput = $input.first().json.text || '[]';\nlet parsed = [];\ntry {\n    const cleanStr = aiOutput.replace(/```json/g, '').replace(/```/g, '').trim();\n    parsed = JSON.parse(cleanStr);\n} catch(e) {}\n\nfunction escapeHtml(str) {\n    return String(str)\n        .replace(/&/g, '&amp;')\n        .replace(/</g, '&lt;')\n        .replace(/>/g, '&gt;');\n}\n\nlet message = \"\\ud83d\\udce7 <b>Отчет по Gmail</b>\\n\\n\";\n\nif (!parsed || parsed.length === 0) {\n    return [{ json: { telegramMessage: \"Новых писем нет! \\ud83c\\udf89\" } }];\n}\n\nfor (const item of parsed) {\n    message += `\\ud83d\\udc64 <b>От кого:</b> ${escapeHtml(item.sender || 'Неизвестно')}\\n`;\n    if (item.unsubscribe && item.unsubscribe !== \"Нет ссылки\") {\n        message += `\\ud83d\\udd17 <b>Отписка:</b> <a href=\"${escapeHtml(item.unsubscribe)}\">ссылка</a>\\n`;\n    } else {\n        message += `\\ud83d\\udd17 <b>Отписка:</b> <i>Не найдена</i>\\n`;\n    }\n    message += `\\ud83d\\udcdd <b>Суть:</b> ${escapeHtml(item.summary || 'Нет данных')}\\n`;\n    message += `------------------------\\n`;\n}\n\nreturn [{ json: { telegramMessage: message } }];"
       },
-      "id": "c2ac550f-c154-4de9-ab9d-fedc51b5ca4e",
       "name": "Format Gmail",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1313,7 +1252,6 @@
           "parse_mode": "HTML"
         }
       },
-      "id": "fe1ef6e0-c859-4d4a-8432-471cba398f2b",
       "name": "TG Gmail",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -1321,10 +1259,8 @@
         5216,
         3076
       ],
-      "webhookId": "83d62ecd-8a9d-4fa7-acbe-7487c5a1a37e",
       "credentials": {
         "telegramApi": {
-          "id": "oNDFx0Ji5smHsZ9f",
           "name": "Zorka Bot"
         }
       }
@@ -1367,7 +1303,6 @@
         },
         "options": {}
       },
-      "id": "ef30b36c-2a2d-49c1-827f-3a30b5711e7b",
       "name": "Set LOG Gmail",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -1387,7 +1322,6 @@
           "waitForSubWorkflow": false
         }
       },
-      "id": "eb76f81e-fdcc-4462-83ed-7622048d2bd6",
       "name": "LOG Gmail",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.1,
@@ -1400,7 +1334,6 @@
       "parameters": {
         "jsCode": "return [\n  { label: 'GNews: форум ИИ', url: 'https://news.google.com/rss/search?q=%D1%84%D0%BE%D1%80%D1%83%D0%BC+%D0%B8%D1%81%D0%BA%D1%83%D1%81%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%BD%D1%8B%D0%B9+%D0%B8%D0%BD%D1%82%D0%B5%D0%BB%D0%BB%D0%B5%D0%BA%D1%82+2026&hl=ru&gl=RU&ceid=RU:ru' },\n  { label: 'GNews: конференция ИИ', url: 'https://news.google.com/rss/search?q=%D0%BA%D0%BE%D0%BD%D1%84%D0%B5%D1%80%D0%B5%D0%BD%D1%86%D0%B8%D1%8F+%D0%B8%D1%81%D0%BA%D1%83%D1%81%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%BD%D1%8B%D0%B9+%D0%B8%D0%BD%D1%82%D0%B5%D0%BB%D0%BB%D0%B5%D0%BA%D1%82+%D1%80%D0%B5%D0%B3%D0%B8%D0%BE%D0%BD&hl=ru&gl=RU&ceid=RU:ru' },\n  { label: 'GNews: цифровой форум', url: 'https://news.google.com/rss/search?q=%D1%86%D0%B8%D1%84%D1%80%D0%BE%D0%B2%D0%BE%D0%B9+%D1%84%D0%BE%D1%80%D1%83%D0%BC+%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F+2026&hl=ru&gl=RU&ceid=RU:ru' },\n  { label: 'GNews: ЦИПР форум', url: 'https://news.google.com/rss/search?q=%D0%A6%D0%98%D0%9F%D0%A0+%D1%86%D0%B8%D1%84%D1%80%D0%BE%D0%B2%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F+%D1%84%D0%BE%D1%80%D1%83%D0%BC+2026&hl=ru&gl=RU&ceid=RU:ru' },\n  { label: 'форумы ИИ', url: 'https://all-events.ru/rss.php' },\n  { label: 'ICT2GO: мероприятия', url: 'https://ict2go.ru/rss/' },\n  { label: 'GNews: IT хакатон', url: 'https://news.google.com/rss/search?q=IT+%D1%84%D0%BE%D1%80%D1%83%D0%BC+%D1%85%D0%B0%D0%BA%D0%B0%D1%82%D0%BE%D0%BD+%D0%A0%D0%BE%D1%81%D1%81%D0%B8%D1%8F+2026&hl=ru&gl=RU&ceid=RU:ru' },\n  { label: 'GNews: IT форум Казахстан', url: 'https://news.google.com/rss/search?q=IT+%D1%84%D0%BE%D1%80%D1%83%D0%BC+%D0%BA%D0%BE%D0%BD%D1%84%D0%B5%D1%80%D0%B5%D0%BD%D1%86%D0%B8%D1%8F+%D0%9A%D0%B0%D0%B7%D0%B0%D1%85%D1%81%D1%82%D0%B0%D0%BD+2026&hl=ru&gl=RU&ceid=RU:ru' },\n  { label: 'GNews: IT форум СНГ', url: 'https://news.google.com/rss/search?q=%D1%84%D0%BE%D1%80%D1%83%D0%BC+%D1%82%D0%B5%D1%85%D0%BD%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D0%B8+%D0%93%D1%80%D1%83%D0%B7%D0%B8%D1%8F+%D0%90%D1%80%D0%BC%D0%B5%D0%BD%D0%B8%D1%8F+%D0%A3%D0%B7%D0%B1%D0%B5%D0%BA%D0%B8%D1%81%D1%82%D0%B0%D0%BD+2026&hl=ru&gl=RU&ceid=RU:ru' },\n  { label: 'GNews: Digital Week СНГ', url: 'https://news.google.com/rss/search?q=digital+week+%D1%86%D0%B8%D1%84%D1%80%D0%BE%D0%B2%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F+%D0%91%D0%B5%D0%BB%D0%BE%D1%80%D1%83%D1%81%D1%81%D0%B8%D1%8F+%D0%9A%D0%B8%D1%80%D0%B3%D0%B8%D0%B7%D0%B8%D1%8F+2026&hl=ru&gl=RU&ceid=RU:ru' }\n].map(f => ({ json: f }));"
       },
-      "id": "ac3e054a-b06d-4f94-8894-9ad6516b5225",
       "name": "📋 Forum GNews Feeds",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1413,7 +1346,6 @@
       "parameters": {
         "jsCode": "const FOLDER_ID = 'b1gu8jmka3lbigi';\nconst API_KEY = 'AQVN3c_YQobOrA6-QbJWTa8G';\n\nconst queries = [\n  'форум искусственный интеллект 2026 Россия',\n  'конференция ИИ нейросети 2026 регистрация',\n  'цифровой форум технологии 2026 программа',\n  'саммит IT инновации регион 2026',\n  'хакатон искусственный интеллект 2026',\n  'форум цифровая трансформация регион 2026',\n  'конференция машинное обучение data science 2026',\n  'IT форум Казахстан Астана 2026',\n  'конференция технологии Грузия Тбилиси 2026',\n  'форум цифровизация Узбекистан Ташкент 2026',\n  'IT саммит Армения Белоруссия Киргизия 2026'\n];\n\nreturn queries.map(q => ({\n  json: {\n    label: 'Yandex: ' + q.substring(0, 40),\n    url: `https://yandex.ru/search/xml?folderid=${FOLDER_ID}&lr=225&filter=none&l10n=ru`,\n    apiKey: API_KEY,\n    xmlBody: `<?xml version=\"1.0\" encoding=\"UTF-8\"?>\\n<request>\\n  <query>${q.replace(/&/g, '&amp;')}</query>\\n  <sortby order=\"descending\">tm</sortby>\\n  <maxpassages>2</maxpassages>\\n  <page>0</page>\\n  <groupings>\\n    <groupby attr=\"d\" mode=\"deep\" groups-on-page=\"10\" docs-in-group=\"1\" />\\n  </groupings>\\n</request>`,\n    query: q\n  }\n}));"
       },
-      "id": "572abdf4-de48-4d21-929a-a81835bbce59",
       "name": "📋 Forum Yandex Queries",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1447,7 +1379,6 @@
           "timeout": 15000
         }
       },
-      "id": "098a3f17-e3c9-40f4-87a6-cdafe977a3f6",
       "name": "🌐 Fetch Forum GNews",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -1491,7 +1422,6 @@
           "timeout": 20000
         }
       },
-      "id": "5f94bb53-3636-46df-9ed1-9ebfa4f2f702",
       "name": "🌐 Fetch Forum Yandex",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -1505,7 +1435,6 @@
       "parameters": {
         "jsCode": "const items = $input.all();\nconst feedMeta = $('📋 Forum GNews Feeds').all();\nconst cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);\n\nfunction extractText(xml, tag) {\n  const pattern = '<' + tag + '[^>]*>(?:<!\\\\[CDATA\\\\[)?([\\\\s\\\\S]*?)(?:\\\\]\\\\]>)?<\\\\/' + tag + '>';\n  const m = xml.match(new RegExp(pattern, 'i'));\n  return m ? m[1].trim() : null;\n}\n\nconst results = [];\nconst seenLocal = new Set();\n\nfor (let i = 0; i < items.length; i++) {\n  const label = feedMeta[i]?.json.label || '?';\n  const xml = items[i].json.body || items[i].json.data || '';\n  if (!xml || xml.length < 50) continue;\n\n  const isAtom = /<entry[\\s>]/i.test(xml);\n  const tag = isAtom ? 'entry' : 'item';\n  const blocks = [...xml.matchAll(new RegExp('<' + tag + '[^>]*>([\\\\s\\\\S]*?)<\\\\/' + tag + '>', 'gi'))];\n\n  for (const block of blocks) {\n    const c = block[1];\n    let title = extractText(c, 'title');\n    if (!title) continue;\n    title = title.replace(/&#\\d+;/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '\"').replace(/&[a-z]+;/gi, '').replace(/[\\uFFFD\\u200B-\\u200D\\uFEFF]/g, '').trim();\n\n    let link = null;\n    const hrefM = c.match(/<link[^>]+href=[\"']([^\"']+)[\"']/);\n    if (hrefM) link = hrefM[1];\n    if (!link) { const lm = c.match(/<link>([\\s\\S]*?)<\\/link>/); if (lm) link = lm[1].trim(); }\n    if (!link) { const idV = extractText(c, 'id'); if (idV?.startsWith('http')) link = idV; }\n\n    const dateStr = extractText(c, 'pubDate') || extractText(c, 'published') || extractText(c, 'updated') || '';\n    if (dateStr) { const d = new Date(dateStr); if (!isNaN(d) && d < cutoff) continue; }\n\n    const descRaw = extractText(c, 'description') || extractText(c, 'content') || '';\n    const descClean = descRaw.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/<[^>]+>/g, ' ').replace(/\\s+/g, ' ').substring(0, 400).trim();\n\n    const key = (link || title.substring(0, 80)).toLowerCase();\n    if (seenLocal.has(key)) continue;\n    seenLocal.add(key);\n\n    results.push({ json: { title, link: link || '', label, desc: descClean, source: 'gnews', pubDate: dateStr } });\n  }\n}\n\nreturn results.length > 0 ? results : [{ json: { empty: true } }];"
       },
-      "id": "34d89609-f43e-489e-a626-fde1a80637c5",
       "name": "🔍 Parse Forum GNews",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1518,7 +1447,6 @@
       "parameters": {
         "jsCode": "const items = $input.all();\nconst feedMeta = $('📋 Forum Yandex Queries').all();\nconst results = [];\nconst seenLocal = new Set();\n\nfor (let i = 0; i < items.length; i++) {\n  const label = feedMeta[i]?.json.label || '?';\n  const xml = items[i].json.body || items[i].json.data || '';\n  if (!xml || xml.length < 50) continue;\n  if (xml.includes('<error code=')) continue;\n\n  const docBlocks = [...xml.matchAll(/<doc[^>]*>([\\s\\S]*?)<\\/doc>/gi)];\n\n  for (const block of docBlocks) {\n    const c = block[1];\n    const urlMatch = c.match(/<url>([\\s\\S]*?)<\\/url>/);\n    const link = urlMatch ? urlMatch[1].trim() : '';\n    if (!link) continue;\n\n    let titleMatch = c.match(/<title>([\\s\\S]*?)<\\/title>/);\n    let title = titleMatch ? titleMatch[1].trim() : '';\n    title = title.replace(/<hlword>/g, '').replace(/<\\/hlword>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '\"').trim();\n    if (!title) continue;\n\n    let desc = '';\n    const passageMatch = c.match(/<passage>([\\s\\S]*?)<\\/passage>/);\n    if (passageMatch) {\n      desc = passageMatch[1].replace(/<hlword>/g, '').replace(/<\\/hlword>/g, '').replace(/&amp;/g, '&').replace(/<[^>]+>/g, ' ').replace(/\\s+/g, ' ').substring(0, 400).trim();\n    }\n\n    let pubDate = '';\n    const modMatch = c.match(/<modtime>([\\s\\S]*?)<\\/modtime>/);\n    if (modMatch) {\n      const raw = modMatch[1].trim();\n      if (raw.length >= 8) pubDate = raw.substring(0,4) + '-' + raw.substring(4,6) + '-' + raw.substring(6,8);\n    }\n\n    const key = link.toLowerCase().split('?')[0];\n    if (seenLocal.has(key)) continue;\n    seenLocal.add(key);\n\n    results.push({ json: { title, link, label, desc, source: 'yandex_xml', pubDate } });\n  }\n}\n\nreturn results.length > 0 ? results : [{ json: { empty: true } }];"
       },
-      "id": "82c018aa-ea35-40d4-afaf-de4dba3aebdb",
       "name": "🔍 Parse Forum Yandex",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1529,7 +1457,6 @@
     },
     {
       "parameters": {},
-      "id": "e2db0289-2c81-4377-b287-5d37fb2b37cc",
       "name": "🔀 Forum Merge",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3,
@@ -1545,7 +1472,6 @@
         "key": "=forum:{{ $json.link }}",
         "options": {}
       },
-      "id": "fed1c75d-1a13-40a1-b9e6-9b0d48c98fea",
       "name": "🗄️ Forum Redis Get",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
@@ -1555,7 +1481,6 @@
       ],
       "credentials": {
         "redis": {
-          "id": "NPXjpDAAuHYyRxsQ",
           "name": "Redis account"
         }
       }
@@ -1564,7 +1489,6 @@
       "parameters": {
         "jsCode": "const redisResults = $input.all();\nconst originalItems = $('🔀 Forum Merge').all();\nconst results = [];\nconst seenLinks = new Set();\n\nfor (let i = 0; i < redisResults.length; i++) {\n  const alreadySent = redisResults[i].json.redisValue;\n  if (alreadySent) continue;\n  const original = originalItems[i]?.json;\n  if (!original || original.empty || !original.title) continue;\n  const normLink = (original.link || '').toLowerCase().split('?')[0].replace(/\\/$/, '');\n  if (normLink && seenLinks.has(normLink)) continue;\n  if (normLink) seenLinks.add(normLink);\n  const normTitle = original.title.toLowerCase().substring(0, 60);\n  if (seenLinks.has('t:' + normTitle)) continue;\n  seenLinks.add('t:' + normTitle);\n  results.push({ json: original });\n}\n\nif (results.length === 0) return [{ json: { empty: true, total: 0 } }];\nreturn results;"
       },
-      "id": "8f36efb0-67d2-44eb-9556-0e6764db5a50",
       "name": "🔄 Forum Dedup",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1596,7 +1520,6 @@
         },
         "options": {}
       },
-      "id": "9d5f3901-b4c8-4676-a04e-a1044e49db8c",
       "name": "Forum: есть?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -1609,7 +1532,6 @@
       "parameters": {
         "jsCode": "const items = $input.all();\nif (items.length === 0 || items[0].json.empty) {\n  return [{ json: { promptText: 'НЕТ РЕЗУЛЬТАТОВ', mapping: '[]', total: 0, empty: true } }];\n}\n\nconst now = new Date();\nconst pastKeywords = /итоги|состоялся|завершился|прошёл|прошел|результаты конкурса|победители/i;\n\nconst filtered = items.filter(item => {\n  const r = item.json;\n  const text = (r.title || '') + ' ' + (r.desc || '');\n  // Отклоняем очевидно прошедшие\n  if (pastKeywords.test(text)) return false;\n  // Если есть дата публикации старше 60 дней — скорее всего устарело\n  if (r.pubDate) {\n    try {\n      const pub = new Date(r.pubDate);\n      const daysDiff = (now - pub) / (1000 * 60 * 60 * 24);\n      if (daysDiff > 60) return false;\n    } catch(e) {}\n  }\n  return true;\n});\n\nif (filtered.length === 0) {\n  return [{ json: { promptText: 'НЕТ РЕЗУЛЬТАТОВ', mapping: '[]', total: 0, empty: true } }];\n}\n\nconst forLLM = filtered.map((item, i) => {\n  const r = item.json;\n  const srcTag = r.source === 'gnews' ? 'Google' : r.source === 'yandex_xml' ? 'Яндекс' : r.source;\n  return `[${i}] [${srcTag}] ${r.title}${r.desc ? '\\nОписание: ' + r.desc.substring(0, 300) : ''}${r.pubDate ? '\\nДата публикации: ' + r.pubDate : ''}`;\n}).join('\\n\\n');\n\nconst mapping = filtered.map((item, i) => ({\n  id: i, title: item.json.title, link: item.json.link, label: item.json.label, source: item.json.source, pubDate: item.json.pubDate || ''\n}));\n\nreturn [{ json: { promptText: forLLM, mapping: JSON.stringify(mapping), total: filtered.length, empty: false } }];"
       },
-      "id": "5cb1b79c-f619-4638-ac63-699129476f8d",
       "name": "📋 Forum Aggregate",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1631,7 +1553,6 @@
         },
         "batching": {}
       },
-      "id": "ed4ff1c2-5495-4732-8eb6-ad5f829dbeaf",
       "name": "🤖 AI Фильтр форумов",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
@@ -1650,11 +1571,9 @@
         6536,
         3692
       ],
-      "id": "556d7a34-d1d9-414d-8dc8-76f529476540",
       "name": "🧠 DeepSeek Forums",
       "credentials": {
         "deepSeekApi": {
-          "id": "U5Ot5VwkUjrNjhbV",
           "name": "Borisov DS"
         }
       }
@@ -1663,7 +1582,6 @@
       "parameters": {
         "jsCode": "const raw = $input.first().json.text || '';\nconst mappingRaw = $('📋 Forum Aggregate').first().json.mapping;\nconst mapping = mappingRaw ? JSON.parse(mappingRaw) : [];\n\nif (raw.trim().toUpperCase() === 'NONE' || !raw.trim()) {\n  return [{ json: { forumText: '🔍 Новых форумов и конференций не найдено.', urls: [], hasResults: false } }];\n}\n\nconst byId = {};\nfor (const m of mapping) byId[m.id] = m;\n\n// Парсер русских дат\nconst monthMap = {\n  'января':1,'февраля':2,'марта':3,'апреля':4,'мая':5,'июня':6,\n  'июля':7,'августа':8,'сентября':9,'октября':10,'ноября':11,'декабря':12,\n  'январь':1,'февраль':2,'март':3,'апрель':4,'май':5,'июнь':6,\n  'июль':7,'август':8,'сентябрь':9,'октябрь':10,'ноябрь':11,'декабрь':12\n};\n\nfunction parseRuDate(str) {\n  if (!str) return null;\n  // \"07 апреля 2026\" или \"7 мая 2026\"\n  const m = str.match(/(\\d{1,2})\\s+(января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)\\s+(\\d{4})/i);\n  if (m) return new Date(parseInt(m[3]), monthMap[m[2].toLowerCase()] - 1, parseInt(m[1]));\n  // \"01.10.2026\" или \"1.10.2026\"\n  const m2 = str.match(/(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})/);\n  if (m2) return new Date(parseInt(m2[3]), parseInt(m2[2]) - 1, parseInt(m2[1]));\n  // Диапазон \"1–3 октября 2026\" — берём последний день\n  const m3 = str.match(/\\d{1,2}[–\\-]\\s*(\\d{1,2})\\s+(января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря)\\s+(\\d{4})/i);\n  if (m3) return new Date(parseInt(m3[3]), monthMap[m3[2].toLowerCase()] - 1, parseInt(m3[1]));\n  return null;\n}\n\nconst today = new Date();\ntoday.setHours(0, 0, 0, 0);\n\nconst lines = [];\nconst urls = [];\nconst seenEvents = new Set();\n\nfor (const line of raw.split('\\n').filter(l => l.trim())) {\n  const parts = line.split('|').map(p => p.trim());\n  if (parts.length < 2) continue;\n  const n = parseInt(parts[0], 10);\n  if (isNaN(n) || !byId[n]) continue;\n  const m = byId[n];\n  const eventName = parts[1] || m.title;\n  const eventDate = parts[2] || '';\n  const eventCity = parts[3] || '';\n  const eventSrc = parts[4] || '';\n\n  // Фильтрация по дате — отбрасываем прошедшие\n  const parsed = parseRuDate(eventDate);\n  if (parsed && parsed < today) continue;\n\n  const normName = eventName.toLowerCase().replace(/[^а-яёa-z0-9]/g, '').replace(/(2026|2025)/g, '').trim();\n  if (seenEvents.has(normName)) continue;\n  seenEvents.add(normName);\n\n  let displayLine = `• <a href=\"${m.link}\">${eventName}</a>`;\n  if (eventDate && eventDate !== 'Дата не указана') displayLine += ` — ${eventDate}`;\n  if (eventCity && eventCity !== 'Не указан') displayLine += ` 📍${eventCity}`;\n  if (eventSrc) displayLine += ` [${eventSrc}]`;\n\n  lines.push(displayLine);\n  urls.push(m.link);\n}\n\nlet forumText = lines.length > 0\n  ? '🔍 <b>Форумы и конференции по ИИ</b>\\n\\n' + lines.join('\\n')\n  : '🔍 Новых форумов и конференций не найдено.';\n\n// Обрезка до лимита Telegram, по целым строкам\nif (forumText.length > 3900) {\n  const allLines = forumText.split('\\n');\n  let result = allLines[0] + '\\n' + allLines[1];\n  for (let i = 2; i < allLines.length; i++) {\n    if ((result + '\\n' + allLines[i]).length > 3900) break;\n    result += '\\n' + allLines[i];\n  }\n  forumText = result;\n}\n\nreturn [{ json: { forumText, urls, hasResults: lines.length > 0 } }];"
       },
-      "id": "37b12b80-c042-4777-b8e5-e01dbbe60f1f",
       "name": "📝 Forum Build Lines",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1727,7 +1645,6 @@
           "parse_mode": "HTML"
         }
       },
-      "id": "e5686ab5-6ad6-4ef7-8681-96b8deee2ba7",
       "name": "TG Форумы",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -1735,10 +1652,8 @@
         7040,
         3044
       ],
-      "webhookId": "c275d8e7-1662-4f23-ae9a-0e6aa0cf54c6",
       "credentials": {
         "telegramApi": {
-          "id": "oNDFx0Ji5smHsZ9f",
           "name": "Zorka Bot"
         }
       }
@@ -1747,7 +1662,6 @@
       "parameters": {
         "jsCode": "const data = $('📝 Forum Build Lines').first().json;\nif (!data.urls || data.urls.length === 0) return [];\nreturn data.urls.map(url => ({ json: { link: url } }));"
       },
-      "id": "a462ed07-c61e-4ecf-9fd4-eca49cec1a9a",
       "name": "Forum Extract URLs",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1764,7 +1678,6 @@
         "expire": true,
         "ttl": 604800
       },
-      "id": "1946711c-88de-4606-aa7c-e86aeebeb4ef",
       "name": "💾 Forum Redis Set",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
@@ -1774,7 +1687,6 @@
       ],
       "credentials": {
         "redis": {
-          "id": "NPXjpDAAuHYyRxsQ",
           "name": "Redis account"
         }
       }
@@ -1817,7 +1729,6 @@
         },
         "options": {}
       },
-      "id": "5d782522-5991-4cc8-90dc-9529a137fe71",
       "name": "Set LOG Форумы",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -1837,7 +1748,6 @@
           "waitForSubWorkflow": false
         }
       },
-      "id": "8e607af8-2424-4257-a0c1-66bfde0e1612",
       "name": "LOG Форумы",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.1,
@@ -1856,7 +1766,6 @@
         4064,
         3468
       ],
-      "id": "977a8323-5f19-4cba-b0a6-9ea0eb77dbbf",
       "name": "Code in JavaScript"
     },
     {
@@ -1874,12 +1783,9 @@
         3840,
         1744
       ],
-      "id": "e8059a2b-79ff-406c-8de3-83c61b88467f",
       "name": "Ожидание",
-      "webhookId": "dc0f9beb-f409-4893-9244-6687e2d6eb80",
       "credentials": {
         "telegramApi": {
-          "id": "oNDFx0Ji5smHsZ9f",
           "name": "Zorka Bot"
         }
       }
@@ -2590,21 +2496,15 @@
       ]
     }
   },
-  "active": true,
+  "active": false,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
     "availableInMCP": true,
     "timeSavedMode": "fixed",
     "callerPolicy": "workflowsFromSameOwner",
-    "errorWorkflow": "SeHd72wURzGUN62n",
     "executionTimeout": 900
   },
-  "versionId": "0e03a3d5-90d3-4985-ac11-82b775a01321",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "efdde4a1bc69b71057bcdf55f6ba95ca3f5f01de8f5cdb71394dc63f3bad5cf9"
-  },
-  "id": "DGiOiQc6_LrJL-8D0Zkb2",
   "tags": []
 }
+

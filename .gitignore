@@ -1,0 +1,22 @@
+.env
+.env.*
+
+# n8n local data (если кто-то запускает рядом)
+.n8n/
+
+# DB / data dumps
+*.sqlite
+*.sqlite3
+data/
+backups/
+dump/
+
+# Logs
+logs/
+*.log
+
+# Node / tooling
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

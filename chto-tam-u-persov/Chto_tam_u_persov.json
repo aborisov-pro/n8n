@@ -13,11 +13,9 @@
         2080,
         -16
       ],
-      "id": "6a505bf3-0c88-409a-a525-23ae616261a8",
       "name": "Redis: Проверить статью",
       "credentials": {
         "redis": {
-          "id": "NPXjpDAAuHYyRxsQ",
           "name": "Redis account"
         }
       },
@@ -33,7 +31,6 @@
         2336,
         -16
       ],
-      "id": "f1270886-70b6-48b7-9054-baf531ec4739",
       "name": "Фильтр: только новые"
     },
     {
@@ -50,11 +47,9 @@
         336,
         592
       ],
-      "id": "1ec1623f-f7e4-41e5-a42a-620e37374960",
       "name": "Redis: Запомнить статьи",
       "credentials": {
         "redis": {
-          "id": "NPXjpDAAuHYyRxsQ",
           "name": "Redis account"
         }
       },
@@ -70,7 +65,6 @@
         784,
         592
       ],
-      "id": "a917ec37-0bec-4315-8fc8-6d9015d50ff8",
       "name": "Сборка в текст"
     },
     {
@@ -83,7 +77,6 @@
         2016,
         592
       ],
-      "id": "138877db-cfdc-4c6b-8edb-bcf065cc4f13",
       "name": "Сохранить сюжет"
     },
     {
@@ -121,12 +114,9 @@
         2464,
         592
       ],
-      "id": "22baaa10-4b50-4767-8227-cd619f25ad51",
       "name": "TG: Финальный отчет",
-      "webhookId": "b0faa897-d487-4be7-bbc5-deeef0f371a9",
       "credentials": {
         "telegramApi": {
-          "id": "fTNfWYo750WQK0tb",
           "name": "Иран"
         }
       }
@@ -145,11 +135,9 @@
         2896,
         592
       ],
-      "id": "165b4ebb-75ba-40d9-8ea0-02783ba996c5",
       "name": "Redis: Запомнить сюжет",
       "credentials": {
         "redis": {
-          "id": "NPXjpDAAuHYyRxsQ",
           "name": "Redis account"
         }
       },
@@ -168,12 +156,9 @@
         544,
         32
       ],
-      "id": "b2f71612-d669-4b7f-9494-37ee6f45c409",
       "name": "Telegram Trigger",
-      "webhookId": "7d5dc0ba-d4f7-48b7-854d-42639fda3684",
       "credentials": {
         "telegramApi": {
-          "id": "fTNfWYo750WQK0tb",
           "name": "Иран"
         }
       }
@@ -190,11 +175,9 @@
         992,
         -16
       ],
-      "id": "724f2ec5-3b45-47a3-9f40-0518f602131c",
       "name": "Redis: Читать lastSeen",
       "credentials": {
         "redis": {
-          "id": "NPXjpDAAuHYyRxsQ",
           "name": "Redis account"
         }
       },
@@ -212,11 +195,9 @@
         560,
         592
       ],
-      "id": "c529ff87-65d1-4bfc-a26a-0507cc59279b",
       "name": "Redis: Читать историю",
       "credentials": {
         "redis": {
-          "id": "NPXjpDAAuHYyRxsQ",
           "name": "Redis account"
         }
       },
@@ -236,12 +217,9 @@
         1216,
         -16
       ],
-      "id": "a117b87e-753d-4216-8ce9-14a4a69cc1ed",
       "name": "Приветствие",
-      "webhookId": "21b01810-75b5-4d4d-bcad-977de3a57483",
       "credentials": {
         "telegramApi": {
-          "id": "fTNfWYo750WQK0tb",
           "name": "Иран"
         }
       },
@@ -257,7 +235,6 @@
         3216,
         -16
       ],
-      "id": "9d3b7bf0-9941-460d-8fb0-acde00c406ed",
       "name": "Предфильтр по теме"
     },
     {
@@ -270,7 +247,6 @@
         2240,
         592
       ],
-      "id": "a2e28dbf-fd25-4974-b389-1957ce2329a2",
       "name": "Разбивка TG"
     },
     {
@@ -291,7 +267,6 @@
         1216,
         592
       ],
-      "id": "448a99aa-8558-43e3-b975-daa5003c966e",
       "name": "Общий разбор"
     },
     {
@@ -304,7 +279,6 @@
         544,
         -112
       ],
-      "id": "d4c938a6-628e-47ef-a8d8-bcff0ebb7192",
       "name": "Подмена чата"
     },
     {
@@ -317,7 +291,6 @@
         768,
         -16
       ],
-      "id": "e72c1f25-bdf0-431e-a3be-747d0de54750",
       "name": "Нормализация"
     },
     {
@@ -330,7 +303,6 @@
         1568,
         592
       ],
-      "id": "8fda6b51-0900-4e8c-be6b-299466fb3d9b",
       "name": "Постфильтр"
     },
     {
@@ -345,11 +317,9 @@
         2768,
         -16
       ],
-      "id": "32625608-24ff-4e14-91e6-a227959b9cf1",
       "name": "Redis: Пред. котировки",
       "credentials": {
         "redis": {
-          "id": "NPXjpDAAuHYyRxsQ",
           "name": "Redis account"
         }
       }
@@ -364,7 +334,6 @@
         2992,
         -16
       ],
-      "id": "f57a66f0-3745-4fec-9710-b5be28afc3d6",
       "name": "Котировки",
       "alwaysOutputData": true
     },
@@ -382,11 +351,9 @@
         2896,
         400
       ],
-      "id": "0cbfbc7a-0cfb-42c5-bae8-09af341578ab",
       "name": "Redis: Сохранить котировки",
       "credentials": {
         "redis": {
-          "id": "NPXjpDAAuHYyRxsQ",
           "name": "Redis account"
         }
       }
@@ -401,7 +368,6 @@
         1792,
         592
       ],
-      "id": "bfceab77-6291-4af8-8abc-62c1a18a0c9b",
       "name": "Восстановление ссылок"
     },
     {
@@ -416,11 +382,9 @@
         2896,
         976
       ],
-      "id": "b33155a9-4c3f-44e6-8683-3aaca63aed56",
       "name": "Redis: Читать счётчик",
       "credentials": {
         "redis": {
-          "id": "NPXjpDAAuHYyRxsQ",
           "name": "Redis account"
         }
       },
@@ -436,7 +400,6 @@
         3120,
         976
       ],
-      "id": "84237e79-df27-4c21-a107-4699288317fc",
       "name": "Проверка счётчика"
     },
     {
@@ -454,11 +417,9 @@
         3344,
         976
       ],
-      "id": "98253643-f979-4386-b547-6d7d5070e2af",
       "name": "Redis: Сохранить счётчик",
       "credentials": {
         "redis": {
-          "id": "NPXjpDAAuHYyRxsQ",
           "name": "Redis account"
         }
       }
@@ -493,7 +454,6 @@
         3568,
         976
       ],
-      "id": "70a46882-b187-4bbf-9853-139cfa041e11",
       "name": "Третий запрос?"
     },
     {
@@ -511,12 +471,9 @@
         3776,
         800
       ],
-      "id": "ceaa2fb3-751b-4fbf-a173-e771865684e7",
       "name": "TG: Промо",
-      "webhookId": "30e0d990-5837-46a6-914c-733166135b6d",
       "credentials": {
         "telegramApi": {
-          "id": "fTNfWYo750WQK0tb",
           "name": "Иран"
         }
       }
@@ -536,11 +493,9 @@
         2896,
         784
       ],
-      "id": "f0190659-7f70-457b-bd10-ea82b6287316",
       "name": "Redis: Обновить lastSeen",
       "credentials": {
         "redis": {
-          "id": "NPXjpDAAuHYyRxsQ",
           "name": "Redis account"
         }
       },
@@ -554,7 +509,6 @@
         320,
         -112
       ],
-      "id": "5f570dc1-12bc-48f7-b7d9-2ef9da38508b",
       "name": "Ручной запуск"
     },
     {
@@ -574,13 +528,11 @@
         1008,
         800
       ],
-      "id": "049d1120-5d22-48c8-be0e-8b6a1dd16471",
       "name": "OpenAI Chat Model",
       "executeOnce": false,
       "retryOnFail": true,
       "credentials": {
         "openAiApi": {
-          "id": "fOZhjzYHGLAqtsKZ",
           "name": "Меркури"
         }
       }
@@ -595,7 +547,6 @@
         1072,
         -560
       ],
-      "id": "2f1a90c7-3484-4453-9314-f30467ae7b80",
       "name": "Список лент"
     },
     {
@@ -620,7 +571,6 @@
         1296,
         -560
       ],
-      "id": "08019a8f-7092-4777-863f-e5484af34d2b",
       "name": "Запрос RSS",
       "continueOnFail": true
     },
@@ -634,7 +584,6 @@
         1520,
         -560
       ],
-      "id": "b21a2d00-99a8-42de-b86a-c8ffec5f457c",
       "name": "Разбивка на новости (Collector)",
       "alwaysOutputData": true
     },
@@ -648,7 +597,6 @@
         1744,
         -560
       ],
-      "id": "4b29bbec-18c9-4a71-823e-4a4bd0b539ba",
       "name": "Агрегировать новые",
       "alwaysOutputData": true
     },
@@ -665,11 +613,9 @@
         1968,
         -560
       ],
-      "id": "7eb2fa62-5d44-4bba-90ec-6d171433ec39",
       "name": "Redis: Читать кэш",
       "credentials": {
         "redis": {
-          "id": "NPXjpDAAuHYyRxsQ",
           "name": "Redis account"
         }
       },
@@ -685,7 +631,6 @@
         2192,
         -560
       ],
-      "id": "9c7f1e8d-58b8-488c-9b90-08c8df10c518",
       "name": "Merge + дедуп"
     },
     {
@@ -718,7 +663,6 @@
         2416,
         -560
       ],
-      "id": "a84cb270-e1cb-4f0d-b3e7-a78ebaf5ab55",
       "name": "Есть статьи?"
     },
     {
@@ -735,11 +679,9 @@
         2640,
         -464
       ],
-      "id": "986c86b8-031a-4ecb-840e-59db2a17f78d",
       "name": "Redis: Сохранить кэш",
       "credentials": {
         "redis": {
-          "id": "NPXjpDAAuHYyRxsQ",
           "name": "Redis account"
         }
       }
@@ -761,7 +703,6 @@
         784,
         -560
       ],
-      "id": "19d8ec5f-665f-4439-9d82-0587c677390c",
       "name": "Schedule Trigger"
     },
     {
@@ -777,11 +718,9 @@
         1504,
         -16
       ],
-      "id": "72574d1a-71c7-4ea8-af5f-98dd43c7aa2e",
       "name": "Redis: Читать кэш статей",
       "credentials": {
         "redis": {
-          "id": "NPXjpDAAuHYyRxsQ",
           "name": "Redis account"
         }
       },
@@ -797,7 +736,6 @@
         1840,
         -16
       ],
-      "id": "311d802c-eb00-4a7b-b2d4-6dc1530d0cbc",
       "name": "Распаковать кэш",
       "alwaysOutputData": true
     },
@@ -809,7 +747,6 @@
         2544,
         -16
       ],
-      "id": "d89fb899-4900-4c0b-9d33-88d996de2dca",
       "name": "Limit"
     },
     {
@@ -868,7 +805,6 @@
         2848,
         224
       ],
-      "id": "6ff47c59-f739-4183-bda3-af647a10fcdb",
       "name": "Set LOG Дайджест"
     },
     {
@@ -898,7 +834,6 @@
         3056,
         224
       ],
-      "id": "b4ba31da-2694-4c94-8b7f-e6a4241cb973",
       "name": "LOG Дайджест"
     },
     {
@@ -932,7 +867,6 @@
         992,
         592
       ],
-      "id": "942bc2ef-7940-40b5-8838-b8fbf5a275d4",
       "name": "If"
     },
     {
@@ -955,7 +889,6 @@
         1232,
         448
       ],
-      "id": "40450821-5d4d-4185-9092-e6a01f6e76d1",
       "name": "Edit Fields"
     }
   ],
@@ -1419,21 +1352,15 @@
       ]
     }
   },
-  "active": true,
+  "active": false,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
     "availableInMCP": true,
     "timeSavedMode": "fixed",
-    "errorWorkflow": "SeHd72wURzGUN62n",
     "callerPolicy": "workflowsFromSameOwner",
     "executionTimeout": 600
   },
-  "versionId": "99e114c0-adcc-4571-8581-dfdbe90c5320",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "efdde4a1bc69b71057bcdf55f6ba95ca3f5f01de8f5cdb71394dc63f3bad5cf9"
-  },
-  "id": "Jon8TFqVHCMgMq9t",
   "tags": []
 }
+
