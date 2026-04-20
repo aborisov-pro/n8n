@@ -1,0 +1,233 @@
+{
+  "name": "Поздравлятор в Максе",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Сообщение от пользователя: {{ $json.body.message.body.text }}\n\nИмя отправителя: {{ $json.body.message.sender.first_name }}\n\nТекущая дата: {{ $now.toFormat('d MMMM yyyy') }}",
+        "options": {
+          "systemMessage": "Ты — Поздравлятор, остроумный бот-поздравитель в мессенджере MAX.\n\nПишешь короткое поздравление — как текст на открытке: 3-4 предложения, не больше. \nКак составить поздравление:1. Извлеки из сообщения максимум контекста: кого поздравляют, с чем, профессия, характер, увлечения, отношения. Используй детали — это основа для шутки или меткого наблюдения.\n2. Имя именинника — из сообщения пользователя. Если не указано — используй имя отправителя.\n 3. Праздник — из сообщения. Если не указан — определи ближайший по текущей дате..\n4. Тон: с юмором и лёгкой иронией. Не злой, не пошлый — добрый, но с искрой. Можно пошутить над ситуацией, возрастом, профессией или праздником — если есть зацепка в контексте\n 5. Добавь 1-2 эмодзи по смыслу.\n6. Никаких штампов: «счастья, здоровья, успехов», «пусть сбываются мечты» — под запретом \n\nОтвечай только текстом поздравления. Без преамбул, пояснений и подписей."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        320,
+        0
+      ],
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "mercury-2",
+          "mode": "list",
+          "cachedResultName": "mercury-2"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        384,
+        224
+      ],
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "name": "OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "max-pozdravlyator",
+        "options": {
+          "responseCode": {
+            "values": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://platform-api.max.ru/messages?chat_id={{ $('Webhook').item.json.body.message.recipient.chat_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": {{ JSON.stringify($json.output) }},\n  \"format\": \"markdown\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        0
+      ],
+      "name": "Отправить в MAX",
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "MAX API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "l1",
+              "name": "workflow_name",
+              "value": "={{ $workflow.name }}",
+              "type": "string"
+            },
+            {
+              "id": "l2",
+              "name": "workflow_id",
+              "value": "={{ $workflow.id }}",
+              "type": "string"
+            },
+            {
+              "id": "l3",
+              "name": "execution_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "l4",
+              "name": "node_name",
+              "value": "Отправить в MAX",
+              "type": "string"
+            },
+            {
+              "id": "l5",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "l6",
+              "name": "items_count",
+              "value": "=1",
+              "type": "number"
+            },
+            {
+              "id": "l7",
+              "name": "output_data",
+              "value": "={{ $('AI Agent').item.json.output.substring(0, 300) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set LOG",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "YOUR_PISEC_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "name": "LOG через Писец",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        1136,
+        0
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Отправить в MAX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Отправить в MAX": {
+      "main": [
+        [
+          {
+            "node": "Set LOG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set LOG": {
+      "main": [
+        [
+          {
+            "node": "LOG через Писец",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 600
+  },
+  "tags": []
+}
