@@ -1,0 +1,748 @@
+{
+  "name": "Прошка. Идеи и календарь",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1984,
+        432
+      ],
+      "name": "Telegram Trigger",
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram Bot API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e8d99ce5-4bbb-44cf-81c5-328bf3759a13",
+              "leftValue": "={{ String($json.message.chat.id) }}",
+              "rightValue": "YOUR_TELEGRAM_CHAT_ID",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1760,
+        432
+      ],
+      "name": "Проверка ID"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Не тот айди",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1584,
+        720
+      ],
+      "name": "Отказ - чужой ID",
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram Bot API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "text-exists",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Есть текст?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1536,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Пришли текст — одним сообщением 📝",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "TG Нет текста",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1296,
+        608
+      ],
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram Bot API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Классификатор — без LLM\n// true-ветка «Это календарь?» = calendar\n// false-ветка = idea (включая идеи с датой)\n\nconst text = (\n  $input.first().json.message?.text ||\n  ''\n).toLowerCase();\n\nconst hasDate = (\n  /\\b\\d{1,2}[\\.\\/]\\d{1,2}/.test(text) ||\n  /завтра|послезавтра|сегодня/.test(text) ||\n  /понедельник|вторник|среда|среду|четверг|пятниц|суббот|воскресень|\\bвс\\b|\\bпн\\b|\\bвт\\b|\\bср\\b|\\bчт\\b|\\bпт\\b|\\bсб\\b/.test(text) ||\n  /январ|феврал|март|апрел|\\bмай\\b|\\bмая\\b|июн|июл|август|сентябр|октябр|ноябр|декабр/.test(text) ||\n  /\\b\\d{1,2}:\\d{2}\\b/.test(text) ||\n  /\\bв \\d{1,2}\\b/.test(text) ||\n  /\\bутра\\b|\\bвечера\\b|\\bночи\\b|\\bднём\\b|\\bдня\\b/.test(text)\n);\n\nconst hasIdeaWord = /\\bидея\\b|\\bидею\\b|\\bидеи\\b/.test(text);\n\n// Только явное событие без маркера «идея» -> календарь\nconst route = (hasDate && !hasIdeaWord) ? 'calendar' : 'idea';\n\nconst src = $input.first().json;\nconst raw_text = src.message?.text || '';\nreturn [{ json: { ...src, _route: route, _text: raw_text } }];\n"
+      },
+      "name": "Классификатор",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1296,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "route-calendar",
+              "leftValue": "={{ $json._route }}",
+              "rightValue": "calendar",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Это календарь?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1056,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "⏳ Добавляю в календарь...",
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_notification": true
+        }
+      },
+      "name": "Ожидание Календарь",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -560,
+        304
+      ],
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram Bot API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "⏳ Сохраняю идею...",
+        "additionalFields": {
+          "appendAttribution": false,
+          "disable_notification": true
+        }
+      },
+      "name": "Ожидание Идея",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -560,
+        624
+      ],
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram Bot API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "mercury-2",
+          "mode": "list",
+          "cachedResultName": "mercury-2"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -320,
+        64
+      ],
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "name": "OpenAI API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Сообщение отправлено {{ DateTime.fromSeconds($('Telegram Trigger').item.json.message?.date || 0).toFormat('dd.MM.yyyy') }}, текущий год {{ $now.year }}. НИКОГДА не используй прошлые годы.\n\nЗапрос: {{ $json._text || $('Telegram Trigger').item.json.message?.text || '' }}",
+        "options": {
+          "systemMessage": "Ты — исполнительный ассистент по Google Calendar. Текущая дата и время: {{ $now.toFormat('yyyy-MM-dd HH:mm') }} (МСК). Текущий год: {{ $now.year }}.\n\nПРАВИЛА:\n1. НИКОГДА не задавай вопросов. Действуй на основе того, что понял.\n2. Если время не указано — ставь ближайшее логичное или текущее.\n3. Длительность по умолчанию — 30 минут.\n4. Summary: короткий заголовок (3–5 слов).\n5. Description: скопируй ПОЛНЫЙ текст исходного сообщения без изменений.\n6. ColorId:\n   - Онлайн → ВСЕГДА передавай число 4\n   - Оффлайн → ВСЕГДА передавай число 10\n   - ТОЛЬКО ЦИФРА, без текста\n7. Location: если есть ссылка или адрес — добавь.\n8. ГОД: ВСЕГДА используй {{ $now.year }} или {{ $now.plus({years:1}).year }}. НИКОГДА не ставь год в прошлом. Если указана дата без года — бери ближайшую будущую дату с таким днём и месяцем.\n9. RRULE:\n   - Если событие регулярное — передавай строку строго по RFC 5545 БЕЗ префикса RRULE:, только тело правила. Пример: FREQ=WEEKLY;BYDAY=MO\n   - Если есть дата окончания — используй UNTIL в формате YYYYMMDDTHHMMSSZ (например: UNTIL=20260520T000000Z)\n   - Если событие разовое — передай ПУСТУЮ СТРОКУ \"\"\n10. Если в сообщении несколько событий — вызывай инструмент отдельно для каждого.\n11. Если просят изменить событие — сначала Get All по названию/дате, возьми ID, затем Update.\n\nАлгоритм: сначала вызови инструмент Google Calendar, затем подтверди результат.\n\nФОРМАТ ОТВЕТА — строго 4 строки, никаких других слов:\n✅ Добавлено: [Заголовок]\n📅 [Дата первого события], [День недели]\n⏰ [Время начала] ([Длительность] мин)\n📍 [Онлайн / адрес / ссылка]"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -320,
+        304
+      ],
+      "name": "AI Agent Календарь"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_CALENDAR_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_GOOGLE_CALENDAR_ID"
+        },
+        "start": "={{ $fromAI('Start', 'Дата и время начала события в формате ISO 8601', 'string') }}",
+        "end": "={{ $fromAI('End', 'Дата и время конца события в формате ISO 8601', 'string') }}",
+        "additionalFields": {
+          "color": "={{ $fromAI('ColorId', 'Цвет события: 4 для онлайн, 10 для оффлайн. Только цифра.', 'string') }}",
+          "description": "={{ $fromAI('Description', 'Полный текст исходного сообщения пользователя', 'string') }}",
+          "location": "={{ $fromAI('Location', 'Адрес или ссылка, если есть. Иначе пустая строка.', 'string') }}",
+          "rrule": "={{ $fromAI('RRULE', 'Для регулярных событий — тело правила RFC 5545 БЕЗ префикса RRULE:, например FREQ=WEEKLY;BYDAY=MO. Для разовых событий — передай пустую строку.', 'string') }}",
+          "summary": "={{ $fromAI('Summary', 'Короткий заголовок события, 3-5 слов', 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -80,
+        64
+      ],
+      "name": "Create an event in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "name": "Google Calendar OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-telegram-text",
+              "name": "telegramText",
+              "value": "={{ $json.output ? $json.output.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : '✅ Выполнено' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -80,
+        304
+      ],
+      "name": "Форматировать ответ"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.telegramText }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        304
+      ],
+      "name": "TG Ответ Календарь",
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram Bot API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = ($input.first().json.output || $input.first().json.text || '').trim();\nconst cleaned = raw.replace(/^```json\\s*/i, '').replace(/^```\\s*/i, '').replace(/```$/i, '').trim();\nlet parsed;\ntry {\n  parsed = JSON.parse(cleaned);\n} catch(e) {\n  parsed = {\n    title: raw.substring(0, 80) || 'Без названия',\n    description: raw,\n    category: 'other',\n    status: 'new',\n    priority: 3,\n    tags: ['parse-error'],\n    source: 'Telegram',\n    notes: 'Ошибка парсинга: ' + e.message\n  };\n}\nif (!parsed.status) parsed.status = 'new';\nif (!parsed.source) parsed.source = 'Telegram';\nif (!parsed.priority) parsed.priority = 3;\nif (!Array.isArray(parsed.tags)) parsed.tags = [];\nreturn [{ json: parsed }];\n"
+      },
+      "name": "Parse JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "ideas",
+        "dataToSend": "autoMapInputData"
+      },
+      "name": "Supabase Insert Idea",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        160,
+        624
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=💡 Идея сохранена!\n\n<b>{{ $('Parse JSON').item.json.title }}</b>\n<b>Категория:</b> {{ $('Parse JSON').item.json.category }}\n<b>Приоритет:</b> {{ $('Parse JSON').item.json.priority }}\n<b>Теги:</b> {{ $('Parse JSON').item.json.tags.join(', ') }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "TG Успех Идея",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        624
+      ],
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram Bot API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "❌ Не удалось сохранить идею. Попробуй ещё раз.",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "TG Ошибка",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        816
+      ],
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram Bot API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "l1",
+              "name": "workflow_name",
+              "value": "={{ $workflow.name }}",
+              "type": "string"
+            },
+            {
+              "id": "l2",
+              "name": "workflow_id",
+              "value": "={{ $workflow.id }}",
+              "type": "string"
+            },
+            {
+              "id": "l3",
+              "name": "execution_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "l4",
+              "name": "node_name",
+              "value": "Supabase Insert Idea",
+              "type": "string"
+            },
+            {
+              "id": "l5",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "l6",
+              "name": "items_count",
+              "value": "=1",
+              "type": "number"
+            },
+            {
+              "id": "l7",
+              "name": "output_data",
+              "value": "={{ $('Parse JSON').item.json.title.substring(0, 300) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set LOG Идея",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        640,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "YOUR_PISEC_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "name": "LOG через Писец",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Telegram Trigger').item.json.message.text || '' }}",
+        "options": {
+          "systemMessage": "Ты — строгий парсер идей. Пользователь пишет идею в свободной форме.\n\nТвоя задача: преобразовать её в JSON-объект по схеме таблицы `public.ideas`. Не добавляй лишних полей. Если информации нет — ставь null.\n\nСхема:\n{\n  \"title\": string,              // короткое название, 1–7 слов\n  \"description\": string | null, // развёрнутый смысл идеи\n  \"category\": \"post\" | \"page\" | \"tool\" | \"automation\" | \"course\" | \"other\",\n  \"status\": \"new\",              // всегда new\n  \"priority\": 1|2|3|4|5,       // 1=срочно, 3=обычный, 5=когда-нибудь\n  \"tags\": string[],             // 3–6 тегов строчными буквами\n  \"source\": \"Telegram\",         // всегда так\n  \"notes\": string | null        // детали, ссылки; если упомянута дата — укажи её здесь\n}\n\nПравила категорий:\n- post: идея для поста (Telegram, VK, сайт)\n- page: страница сайта или лендинга\n- tool: инструмент, сервис, расширение\n- automation: автоматизация, n8n-воркфлоу, бот\n- course: учебный материал, программа\n- other: всё остальное\n\nВерни ТОЛЬКО валидный JSON. Никакого текста вне JSON. Никаких markdown-блоков."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -368,
+        624
+      ],
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        864
+      ],
+      "name": "DeepSeek Chat Model",
+      "credentials": {
+        "deepSeekApi": {
+          "name": "DeepSeek API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Проверка ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Проверка ID": {
+      "main": [
+        [
+          {
+            "node": "Есть текст?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Отказ - чужой ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Есть текст?": {
+      "main": [
+        [
+          {
+            "node": "Классификатор",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TG Нет текста",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Классификатор": {
+      "main": [
+        [
+          {
+            "node": "Это календарь?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Это календарь?": {
+      "main": [
+        [
+          {
+            "node": "Ожидание Календарь",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ожидание Идея",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent Календарь",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Календарь",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Календарь": {
+      "main": [
+        [
+          {
+            "node": "Форматировать ответ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Форматировать ответ": {
+      "main": [
+        [
+          {
+            "node": "TG Ответ Календарь",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse JSON": {
+      "main": [
+        [
+          {
+            "node": "Supabase Insert Idea",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Insert Idea": {
+      "main": [
+        [
+          {
+            "node": "TG Успех Идея",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TG Ошибка",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TG Успех Идея": {
+      "main": [
+        [
+          {
+            "node": "Set LOG Идея",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set LOG Идея": {
+      "main": [
+        [
+          {
+            "node": "LOG через Писец",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ожидание Идея": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ожидание Календарь": {
+      "main": [
+        [
+          {
+            "node": "AI Agent Календарь",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "executionTimeout": 900
+  },
+  "tags": []
+}
